@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knx.inventorydemo.mapper.ProductMetaMapper">
+  <insert id="addNewProduct" parameterType="com.knx.inventorydemo.structure.ProductMeta"
+    keyProperty="id"> insert into product_meta (id, name, vendor_name, default_uom) values (#{id},
+    #{name}, #{vendor.name}, #{default_uom}); </insert>
+
+  <select id="getAll" resultType="com.knx.inventorydemo.structure.ProductMeta"> select * from
+    product_meta; </select>
+
+  <sql id="initTable"> create table if not exists inventorydemo.product_meta ( id varchar(20) not
+    null, name varchar(50) not null, vendor_name varchar(20), default_uom varchar(8) not null
+    default 'UNIT', primary key (id) ); </sql>
+</mapper>
