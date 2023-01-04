@@ -10,7 +10,14 @@ public interface ProductMetaMapper {
 
     public ProductMeta getProductById(int id);
 
-    public ProductMeta getProductByStr(String str);
+    /**
+     * @param str String for selecting, can compose finding specifiy by add %str%
+     * Example I select the single word arround with %word%, then multi word can using %apollo%%a3020% together.
+     * 
+     * 
+     * @return a list of {@link} ProductMeta contains id and productName only
+     */
+    public List<ProductMeta> getProductByStr(String str);
 
     public int deleteProductMetaById(int id);
 
