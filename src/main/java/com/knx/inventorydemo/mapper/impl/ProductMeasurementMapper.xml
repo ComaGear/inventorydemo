@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper>
+
+    <insert id="measInit" parameterType="String">
+        create table inventorydemo.product_meas_${layer} (
+            product_id varchar(20),
+            measurement float,
+            relative_id varchar(30),
+            uom_name varchar(8),
+            layer_update_rule_id varchar(2),
+            unique key (relative_id)
+        );
+    </insert>
+
+    <insert id="updateRuleInit" parameterType="String">
+        create table inventorydemo.product_meas_update_online (
+            layer_id varchar(10),
+            layer_update_rule_id varchar(8),
+            measure float
+        );
+    </insert>
+</mapper>

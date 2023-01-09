@@ -1,13 +1,25 @@
 package com.knx.inventorydemo.structure;
 
+/**
+ * when create a new product meta, it has unnullable field was id, name, defaultUom
+ * 
+ * 
+ */
 public class ProductMeta {
 
     // this often references to product barcode
     private String id;
+    
     private String name;
     private Vendor vendor;
     private String defaultUom;
     private boolean activity;
+
+    public boolean check(){
+        if(id == null) throw new NullPointerException("ProductMeta's id is null");
+        if(name == null) throw new NullPointerException("ProductMeta's name is null");
+        return true;
+    }
 
     public boolean isActivity() {
         return activity;
