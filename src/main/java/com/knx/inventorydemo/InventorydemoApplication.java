@@ -18,4 +18,6 @@ public class InventorydemoApplication {
 		return new ProductService();
 	}
 
+	// TODO: base init of ProductUOM's Update Rule
+
 }

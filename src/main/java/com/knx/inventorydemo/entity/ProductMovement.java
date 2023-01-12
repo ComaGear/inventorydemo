@@ -1,4 +1,4 @@
-package com.knx.inventorydemo.structure;
+package com.knx.inventorydemo.entity;
 
 public class ProductMovement {
 

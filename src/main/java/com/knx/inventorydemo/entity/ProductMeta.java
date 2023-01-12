@@ -1,4 +1,4 @@
-package com.knx.inventorydemo.structure;
+package com.knx.inventorydemo.entity;
 
 /**
  * when create a new product meta, it has unnullable field was id, name, defaultUom
@@ -42,6 +42,10 @@ public class ProductMeta {
         this.id = id;
         this.name = name;
         this.vendor = vendor;
+    }
+
+    public ProductMeta(){
+        
     }
 
     public Vendor getVendor() {

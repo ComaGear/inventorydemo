@@ -1,23 +1,18 @@
-package com.knx.inventorydemo.structure;
+package com.knx.inventorydemo.entity;
 
 public class ProductMeasurement {
     
     public String productId;
-    
-
     public float measurement;
     public String relativeId;
     public String UOM_name;
     public String updateRule;
+    public String layer;
 
     public boolean check(){
         if(UOM_name == null) throw new NullPointerException("ProductMeta's UOM_name is null");
         if(measurement <= 0) throw new NullPointerException("ProductMeta's measurement is null");
         return true;
-    }
-
-    public String getLayer(){
-        return "";
     }
 
     public String getProductId() {
@@ -26,6 +21,15 @@ public class ProductMeasurement {
 
     public ProductMeasurement setProductId(String productId) {
         this.productId = productId;
+        return this;
+    }
+
+    public String getLayer() {
+        return layer;
+    }
+
+    public ProductMeasurement setLayer(String layer) {
+        this.layer = layer;
         return this;
     }
 
@@ -51,8 +55,8 @@ public class ProductMeasurement {
         return UOM_name;
     }
 
-    public ProductMeasurement setUOM_name(String uOM_name) {
-        UOM_name = uOM_name;
+    public ProductMeasurement setUOM_name(String UOM_name) {
+        this.UOM_name = UOM_name;
         return this;
     }
 

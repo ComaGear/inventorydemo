@@ -4,12 +4,12 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.knx.inventorydemo.entity.ProductMeasurement;
+import com.knx.inventorydemo.entity.ProductMeta;
+import com.knx.inventorydemo.entity.ProductUOM;
 import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 import com.knx.inventorydemo.mapper.ProductMetaMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
-import com.knx.inventorydemo.structure.ProductMeasurement;
-import com.knx.inventorydemo.structure.ProductMeta;
-import com.knx.inventorydemo.structure.ProductUOM;
 
 public class ProductService {
     
@@ -41,7 +41,7 @@ public class ProductService {
         
     }
 
-    /*S
+    /**
      * this method create added productMeta and provide default uom.
      */
     public void addNewProduct(ProductMeta productMeta){
@@ -56,6 +56,27 @@ public class ProductService {
 
     public List<ProductMeta> getAllProductMeta(){
         return productMetaMapper.getAll();
+    }
+
+    /**
+     * add a new product's measurment to specify layer of sales channel.
+     * 
+     */
+    public void addNewMeasurementToProduct(ProductMeta product, ProductMeasurement measurement) {
+        // TODO: add new measurement inserting specify on layer.
+    }
+
+    /**
+     * 
+     * @param id
+     * @return product meta find in database.
+     */
+    public ProductMeta getProductMetaById(String id) {
+        return null;
+        // TODO: getting one product meta by id
+    }
+
+    public void findAllCustomMeasurementByProductId(String id) {
     }
 
 }

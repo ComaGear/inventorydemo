@@ -2,7 +2,7 @@ package com.knx.inventorydemo.mapper;
 
 import java.util.List;
 
-import com.knx.inventorydemo.structure.ProductMeta;
+import com.knx.inventorydemo.entity.ProductMeta;
 
 public interface ProductMetaMapper {
 
