@@ -2,15 +2,18 @@ package com.knx.inventorydemo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.knx.inventorydemo.Service.ProductService;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
 
+@Transactional
+// @ContextConfiguration(locations = )
 @SpringBootTest
 public class ProuctUOMTests {
     
@@ -20,7 +23,7 @@ public class ProuctUOMTests {
     ProductMeta product;
     ProductMeasurement measurement;
 
-    @BeforeAll
+    @BeforeEach
     public void creatingATestingProductMeta(){
         product = new ProductMeta()
             .setId("9667")

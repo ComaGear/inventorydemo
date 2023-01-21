@@ -21,13 +21,13 @@ public interface ProductMetaMapper {
 
     public int deleteProductMetaById(int id);
 
-    public int updateProductMetaById(ProductMeta productMeta);
-
     public int update(ProductMeta productMeta);
 
-    public int setActivityById(int id);
+    public int setActivityById(int id, boolean activity);
     
     public boolean checkActivityById(int id);
 
     public List<ProductMeta> getAll();
+
+    public void init();
 }

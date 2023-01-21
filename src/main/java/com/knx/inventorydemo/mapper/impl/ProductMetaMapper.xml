@@ -2,8 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.knx.inventorydemo.mapper.ProductMetaMapper">
 
-
-  <resultMap id="ProductMeta" type="com.knx.inventorydemo.structure.ProductMeta">
+  <resultMap id="ProductMetaM" type="ProductMeta">
     <id property="id" column="id"/>
     <result property="name" column="name"/>
     <result property="defaultUom" column="default_uom"/>
@@ -12,24 +11,48 @@
       <id column="vendor_name" property="name"/>
     </association>
   </resultMap>
-  
-  <insert id="addNewProduct" parameterType="com.knx.inventorydemo.structure.ProductMeta"
+
+  <insert id="addNewProduct" parameterType="ProductMeta"
     keyProperty="id"> insert into product_meta (id, name, vendor_name, default_uom) values (#{id},
     #{name}, #{vendor.name}, #{default_uom}); </insert>
 
-  <select id="getProductById" resultMap="ProductMeta">
+  <select id="getProductById" resultMap="ProductMetaM">
     select id, name, vendor_name, default_uom, activity from product_meta where id = #{id}
   </select>
 
-  <select id="getProductByStr" resultMap="ProductMeta">
+  <select id="getProductByStr" resultMap="ProductMetaM">
     select id, name from product_meta where name LIKE #{str}
   </select>
 
   <delete id="deleteProductMetaById">
-    delete
+    delete * where id = #{id}
   </delete>
 
-  <select id="getAll" resultType="com.knx.inventorydemo.structure.ProductMeta"> select * from
+  <update id="update" parameterType="ProductMeta">
+    update inventorydemo.product_meta 
+      <trim prefix="set" suffixOverrides=",">
+        <if test="name != null">name = #{name}</if>
+        <if test="vendor != null">vendor_name = #{vendor.name}</if>
+        <if test="defaultUom != null">default_uom = #{defaultUom}</if>
+        <if test="activity != null">activity = #{activity}</if>
+      </trim>
+    where id = #{id}
+  </update>
+
+  <update id="setActivityById">
+    update inventorydemo.product_meta set
+    <choose>
+      <when test="activity == true">activity = true</when>
+      <when test="activity == false">activity = false</when>
+    </choose>
+    where id = #{id}
+  </update>
+
+  <select id="checkActivityById">
+    <!-- TODO:  -->
+  </select>
+
+  <select id="getAll" resultType="ProductMetaM"> select * from
     product_meta; </select>
 
   <insert id="initTable"> create table if not exists inventorydemo.product_meta ( id varchar(20) not

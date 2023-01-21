@@ -15,9 +15,10 @@ public class InventorydemoApplication {
 	
 	@Bean
 	public ProductService productService(){
-		return new ProductService();
+		ProductService productService = new ProductService();
+		productService.init();
+		return productService;
 	}
 
 	// TODO: base init of ProductUOM's Update Rule
-
 }

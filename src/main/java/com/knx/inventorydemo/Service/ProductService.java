@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.entity.ProductUOM;
+import com.knx.inventorydemo.exception.UnkrownLayerException;
 import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 import com.knx.inventorydemo.mapper.ProductMetaMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
@@ -57,15 +58,7 @@ public class ProductService {
     public List<ProductMeta> getAllProductMeta(){
         return productMetaMapper.getAll();
     }
-
-    /**
-     * add a new product's measurment to specify layer of sales channel.
-     * 
-     */
-    public void addNewMeasurementToProduct(ProductMeta product, ProductMeasurement measurement) {
-        // TODO: add new measurement inserting specify on layer.
-    }
-
+ 
     /**
      * 
      * @param id
@@ -76,7 +69,24 @@ public class ProductService {
         // TODO: getting one product meta by id
     }
 
-    public void findAllCustomMeasurementByProductId(String id) {
+    public List<ProductMeta> findAllProductMetaBySimilarlyStrList(List<String> strings){
+
+        //combine strings to a string with arround %s%
+        StringBuilder stringBuilder = new StringBuilder();
+        strings.forEach(str -> {
+            stringBuilder.append("%");
+            stringBuilder.append(str);
+            stringBuilder.append("%");
+        });
+
+        return productMetaMapper.getProductByStr(stringBuilder.toString());
+    }
+
+    /**
+     * initialized database
+     */
+    public void init() {
+        productMetaMapper.init();
     }
 
 }
