@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.knx.inventorydemo.mapper.ProductMeasurementMapper">
+
+    <resultMap id="ProductMeas" type="com.knx.inventorydemo.entity.ProductMeasurement">
+        <id column="relative_id" property="relativeId"/>
+        <result column="product_id" property="productId" />
+        <result column="measurement" property="measurement"/>
+        <result column="uom_name" property="UOM_name"/>
+        <result column="layer_update_rule_id" property="updateRule"/>
+        <result column="layer" property="layer"/>
+    </resultMap>
+
+    <insert id="addMeasureTo">
+        insert into product_meas_${layer} (relative_id, product_id, measurement, uom_name, layer_update_rule_id)
+        values (#{measure.relativeId}, #{measure.productId}, #{measure.measurement}, #{measure.UOM_name}, #{measure.updateRule})
+    </insert>
+
+    <update id="updateMeasureTo">
+        update product_meas_${layer}
+        <trim prefix="set" suffixOverrides=",">
+            <if test="measure.relativeId != null">relative_id = #{measure.relativeId},</if>
+            <if test="measure.productId != null">product_id = #{measure.productId},</if>
+            <if test="measure.measurement != null">measurement = #{measure.measurement},</if>
+            <if test="measure.UOM_name != null">uom_name = #{measure.UOM_name},</if>
+            <if test="measure.updateRule != null">layer_update_rule_id = #{measure.updateRule},</if>
+        </trim>
+        where relative_id = #{relativeId}
+    </update>
+
+    <update id="changeUpdateRuleToByProductId">
+        update product_meas_${layer} set
+        layer_update_rule_id = #{updateRule}
+        where product_id = #{productId}
+    </update>
+
+    <select id="getProductMeasByProductIdWithLayer" resultMap="ProductMeas">
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{layer} as layer
+        from product_meas_${layer}
+        where product_id = #{productId}
+    </select>
+
+    <select id="getProductMeasByRelativeIdWithLayer" resultMap="ProductMeas">
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{layer} as layer
+        from product_meas_${layer}
+        where relative_id = #{relativeId}
+    </select>
+
+    <select id="bulkGetProductMeasByRelativeIdwithLayer" resultMap="ProductMeas">
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{layer} as layer
+        from product_meas_${layer}
+        <where>
+            <foreach collection="relativeIds" item="relativeId"
+            open="relative_id in (" separator="," close=")" >
+                #{relativeId}
+            </foreach>
+        </where>
+    </select>
+
+    <select id="getProductMeasListBySimilarRelativeId" resultMap="ProductMeas">
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{layer} as layer
+        from product_meas_${layer}
+        where relative_id like #{relativeId}
+    </select>
+
+    <insert id="measInit" parameterType="String">
+        create table if not exists product_meas_${layer} (
+            product_id varchar(20),
+            measurement float,
+            relative_id varchar(30),
+            uom_name varchar(8),
+            layer_update_rule_id varchar(2),
+            unique key (relative_id)
+        );
+    </insert>
+
+    <select id="checkLayerExists" resultType="Integer" parameterType="String">
+        select
+            if(isnull(TABLE_NAME), 0, 1)
+        from
+            information_schema.tables
+        where
+            TABLE_name = #{layer} and
+            TABLE_SCHEMA like 'inventorydemo' and
+            TABLE_TYPE like 'BASE TABLE';
+    </select>
+
+    <insert id="updateRuleInit" parameterType="String">
+        create table product_meas_update_online (
+            layer_id varchar(10),
+            layer_update_rule_id varchar(8),
+            measure float
+        );
+    </insert>
+</mapper>

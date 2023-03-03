@@ -14,7 +14,7 @@
 
   <insert id="addNewProduct" parameterType="ProductMeta"
     keyProperty="id"> insert into product_meta (id, name, vendor_name, default_uom) values (#{id},
-    #{name}, #{vendor.name}, #{default_uom}); </insert>
+    #{name}, #{vendor.name}, #{defaultUom}); </insert>
 
   <select id="getProductById" resultMap="ProductMetaM">
     select id, name, vendor_name, default_uom, activity from product_meta where id = #{id}
@@ -48,14 +48,15 @@
     where id = #{id}
   </update>
 
-  <select id="checkActivityById">
-    <!-- TODO:  -->
+  <select id="checkActivityById" resultType="_boolean">
+    select activity from product_meta
+    where id = #{id}
   </select>
 
-  <select id="getAll" resultType="ProductMetaM"> select * from
+  <select id="getAll" resultMap="ProductMetaM"> select * from
     product_meta; </select>
 
-  <insert id="initTable"> create table if not exists inventorydemo.product_meta ( id varchar(20) not
+  <insert id="init"> create table if not exists inventorydemo.product_meta ( id varchar(20) not
     null, name varchar(50) not null, vendor_name varchar(20), default_uom varchar(8) not null
     default 'UNIT', activity boolean default false, primary key (id) ); </insert>
 </mapper>

@@ -1,22 +1,33 @@
 package com.knx.inventorydemo.entity;
 
 public class ProductMeasurement {
-    
-    public String productId;
-    public float measurement;
-    public String relativeId;
-    public String UOM_name;
-    public String updateRule;
-    public String layer;
 
-    public boolean check(){
-        if(UOM_name == null) throw new NullPointerException("ProductMeta's UOM_name is null");
-        if(measurement <= 0) throw new NullPointerException("ProductMeta's measurement is null");
+    private String productId;
+    private float measurement;
+    private String relativeId;
+    private String UOM_name;
+    private String updateRule;
+    private String layer;
+   
+
+    public boolean check() {
+        if (UOM_name == null)
+            throw new NullPointerException("ProductMeta's UOM_name is null");
+        if (measurement <= 0)
+            throw new NullPointerException("ProductMeta's measurement is null");
         return true;
     }
 
     public String getProductId() {
         return productId;
+    }
+
+    public String getUpdateRule() {
+        return updateRule;
+    }
+
+    public void setUpdateRule(String updateRule) {
+        this.updateRule = updateRule;
     }
 
     public ProductMeasurement setProductId(String productId) {

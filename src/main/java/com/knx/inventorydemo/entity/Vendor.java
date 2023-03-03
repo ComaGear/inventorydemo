@@ -12,6 +12,10 @@ public class Vendor {
         this.deliveryInvenval = deliveryInvenval;
     }
 
+    public Vendor(){
+        
+    }
+
     public String getName() {
         return name;
     }

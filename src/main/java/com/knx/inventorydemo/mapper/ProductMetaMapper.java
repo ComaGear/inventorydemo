@@ -8,7 +8,7 @@ public interface ProductMetaMapper {
 
     public int addNewProduct(ProductMeta productMeta);
 
-    public ProductMeta getProductById(int id);
+    public ProductMeta getProductById(String id);
 
     /**
      * @param str String for selecting, can compose finding specifiy by add %str%

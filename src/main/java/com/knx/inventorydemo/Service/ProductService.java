@@ -2,27 +2,25 @@ package com.knx.inventorydemo.Service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.entity.ProductUOM;
-import com.knx.inventorydemo.exception.UnkrownLayerException;
-import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 import com.knx.inventorydemo.mapper.ProductMetaMapper;
-import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
 public class ProductService {
     
-    @Autowired
     ProductMetaMapper productMetaMapper;
-    
-    @Autowired
-    ProductMeasurementMapper productMeasurementMapper;
 
-    @Autowired
-    ProductStockingMapper productStockingMapper;
+    MeasurementService measurementService;
 
+
+    public void setMeasurementService(MeasurementService measurementService) {
+        this.measurementService = measurementService;
+    }
+
+    public ProductService(ProductMetaMapper productMetaMapper) {
+        this.productMetaMapper = productMetaMapper;
+    }
 
     /**
      * this method create added product meta with custom measurements.
@@ -37,8 +35,11 @@ public class ProductService {
         if(productMeta.getId() == null || productMeta.getName() == null) throw new NullPointerException();
 
         // implement
+        ProductMeta checkingProductMeta = productMetaMapper.getProductById(productMeta.getId());
+        if(checkingProductMeta != null && !checkingProductMeta.getName().isEmpty()) return;
+        
         productMetaMapper.addNewProduct(productMeta);
-        productMeasurementMapper.addMeasureTo(productMeasurement.getLayer(), productMeasurement);
+        measurementService.addNewMeasurementToProduct(productMeta, productMeasurement);
         
     }
 
@@ -65,8 +66,8 @@ public class ProductService {
      * @return product meta find in database.
      */
     public ProductMeta getProductMetaById(String id) {
-        return null;
-        // TODO: getting one product meta by id
+        if(id == null || id.equals("")) throw new NullPointerException();
+        return productMetaMapper.getProductById(id);
     }
 
     public List<ProductMeta> findAllProductMetaBySimilarlyStrList(List<String> strings){
@@ -86,7 +87,7 @@ public class ProductService {
      * initialized database
      */
     public void init() {
-        productMetaMapper.init();
+        this.productMetaMapper.init();
     }
 
 }
