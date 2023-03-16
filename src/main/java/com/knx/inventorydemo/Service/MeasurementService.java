@@ -18,21 +18,21 @@ public class MeasurementService  {
         this.productMeasurementMapper = productMeasurementMapper;
     }
 
-    public boolean checkLayerExists(String layer) {
-        try {
-            String t = "product_meas_" + layer;
-            int i = productMeasurementMapper.checkLayerExists(t);
-            if(i == 1) return true;
-        }catch(DataAccessException e){
-            throw e;
-        }
-        return false;
-    }
+    // public boolean checkLayerExists(String layer) {
+    //     try {
+    //         String t = "product_meas_" + layer;
+    //         int i = productMeasurementMapper.checkLayerExists(t);
+    //         if(i == 1) return true;
+    //     }catch(DataAccessException e){
+    //         throw e;
+    //     }
+    //     return false;
+    // }
 
     public List<ProductMeasurement> findAllCustomMeasurementByProductId(String layer, String id) {
         if(id == null || id.equals("")) throw new NullPointerException("provided id is null");
         
-        List<ProductMeasurement> productMeasList = productMeasurementMapper.getProductMeasByProductIdWithLayer(layer, id);
+        List<ProductMeasurement> productMeasList = productMeasurementMapper.getProductMeasByProductIdWithChannel(layer, id);
 
         return productMeasList;
     }
@@ -51,14 +51,14 @@ public class MeasurementService  {
 
         if(product.getId() == null || product.getId() == "") throw new NullPointerException("product meta id is null");
         if(measurement.getMeasurement() <= 0) throw new IllegalArgumentException("Measurement's measure value should not less than zero");
-        if(measurement.getLayer() != ProductUOM.LAYER) {
+        if(measurement.getSalesChannel() != ProductUOM.LAYER) {
             if(measurement.getRelativeId() == null || measurement.getRelativeId() == "") throw new NullPointerException("measurement's relative id is null");
         } 
-        if(measurement.getLayer() == null || measurement.getLayer().equals("")) throw new NullPointerException("measurement's layer is null");
+        if(measurement.getSalesChannel() == null || measurement.getSalesChannel().equals("")) throw new NullPointerException("measurement's layer is null");
 
         // checking param ProductMeasurement existence.
         if(measurement.getRelativeId() != null){
-            ProductMeasurement checkingMeasurement = this.getProductMeasByRelativeIdWithLayer(measurement.getRelativeId(), measurement.getLayer());
+            ProductMeasurement checkingMeasurement = this.getProductMeasByRelativeIdWithChannel(measurement.getRelativeId(), measurement.getSalesChannel());
             if(checkingMeasurement != null && checkingMeasurement.getProductId() != null) return; // measurement relative id is already exist.
         }
 
@@ -66,17 +66,17 @@ public class MeasurementService  {
         if(measurement.getProductId() == null || measurement.getProductId() == "") {
             measurement.setProductId(product.getId());
         }
-        if(!this.checkLayerExists(measurement.getLayer())) throw new UnkrownLayerException(measurement.getLayer() + " is not exists");
+        // if(!this.checkLayerExists(measurement.getSalesChannel())) throw new UnkrownLayerException(measurement.getSalesChannel() + " is not exists");
         
-        productMeasurementMapper.addMeasureTo(measurement.getLayer(), measurement);
+        productMeasurementMapper.addMeasureTo(measurement.getSalesChannel(), measurement);
     }
 
-    private ProductMeasurement getProductMeasByRelativeIdWithLayer(String relativeId, String layer) {
+    private ProductMeasurement getProductMeasByRelativeIdWithChannel(String relativeId, String layer) {
         if(relativeId == null || relativeId.equals("")) throw new NullPointerException("param of relative id is null");
         if(layer == null || layer.equals("")) throw new NullPointerException("layer is null");
 
         //implements
-        return productMeasurementMapper.getProductMeasByRelativeIdWithLayer(layer, relativeId);
+        return productMeasurementMapper.getProductMeasByRelativeIdWithChannel(layer, relativeId);
     }
 
     /**
@@ -89,7 +89,7 @@ public class MeasurementService  {
     public String addChildSkuToExistsSku(ProductMeasurement measure, String parentSku) throws IllegalAccessException{
         if(measure.getProductId() == null || measure.getProductId() == "") throw new IllegalArgumentException("Product Measurement's product Id is null");
         if(measure.getMeasurement() <= 0) throw new IllegalArgumentException("Product Measurement's measure should not less than zero");
-        if(measure.getLayer() == null || measure.getLayer() == "") throw new IllegalArgumentException("Product Measurement's layer is null");
+        if(measure.getSalesChannel() == null || measure.getSalesChannel() == "") throw new IllegalArgumentException("Product Measurement's layer is null");
         
         // modify parentsku with only sku not child sku.
         if(parentSku.contains("-")) {
@@ -98,8 +98,8 @@ public class MeasurementService  {
         }
         boolean exists = false;
 
-        // bulk get where like parent sku 
-        List<ProductMeasurement> bulkGet = productMeasurementMapper.getProductMeasListBySimilarRelativeId(measure.getLayer(), parentSku + "%");
+        // bulk get where like parent sku s
+        List<ProductMeasurement> bulkGet = productMeasurementMapper.getProductMeasListBySimilarRelativeId(measure.getSalesChannel(), parentSku + "%");
 
         if(bulkGet == null || bulkGet.isEmpty()) {
             throw new IllegalArgumentException(parentSku + " is not exists.");
@@ -124,12 +124,12 @@ public class MeasurementService  {
             parentNewSku = parentSku + "-" + Character.toString(c);
             
             parentMeas.setRelativeId(parentNewSku);
-            productMeasurementMapper.updateMeasureTo(parentMeas.getLayer(), parentMeas, parentSku);
+            productMeasurementMapper.updateMeasureTo(parentMeas.getSalesChannel(), parentMeas, parentSku);
 
             //process child meas as first child.
             c++;
             measure.setRelativeId(parentSku + "-" + Character.toString(c));
-            productMeasurementMapper.addMeasureTo(measure.getLayer(), measure);
+            productMeasurementMapper.addMeasureTo(measure.getSalesChannel(), measure);
         } else{
 
             // get Charater after "-" and add 1 to next char bring new sku.
@@ -143,16 +143,14 @@ public class MeasurementService  {
             }
 
             measure.setRelativeId(nextSku);
-            productMeasurementMapper.addMeasureTo(measure.getLayer(), measure);
+            productMeasurementMapper.addMeasureTo(measure.getSalesChannel(), measure);
         }
 
         return parentSku;
     }
 
     public void init(String layer) {
-        if(layer == null) productMeasurementMapper.measInit(ProductUOM.LAYER);
-        productMeasurementMapper.measInit(layer);
-
+        productMeasurementMapper.measInit();
         // TODO: Update Rule Setting 
     }
 
@@ -164,7 +162,7 @@ public class MeasurementService  {
         if(relativeId != null && !relativeId.equals("")){
 
             ProductMeasurement measurement = new ProductMeasurement();
-            measurement.setLayer(layer)
+            measurement.setSalesChannel(layer)
                 .setRelativeId(relativeId)
                 .setUpdateRule(updateRule);
             productMeasurementMapper.updateMeasureTo(layer, measurement, measurement.getRelativeId());
@@ -178,7 +176,7 @@ public class MeasurementService  {
     }
 
     private void updateByRelativeId(ProductMeasurement productMeas) {
-        productMeasurementMapper.updateMeasureTo(productMeas.getLayer(), productMeas, productMeas.getRelativeId());
+        productMeasurementMapper.updateMeasureTo(productMeas.getSalesChannel(), productMeas, productMeas.getRelativeId());
     }
     
 }

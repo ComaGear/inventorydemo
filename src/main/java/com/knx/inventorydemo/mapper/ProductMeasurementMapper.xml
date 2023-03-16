@@ -9,47 +9,49 @@
         <result column="measurement" property="measurement"/>
         <result column="uom_name" property="UOM_name"/>
         <result column="layer_update_rule_id" property="updateRule"/>
-        <result column="layer" property="layer"/>
+        <result column="channel" property="salesChannel"/>
+        <result column="barcode" property="anotherBarcode"/>
     </resultMap>
 
     <insert id="addMeasureTo">
-        insert into product_meas_${layer} (relative_id, product_id, measurement, uom_name, layer_update_rule_id)
-        values (#{measure.relativeId}, #{measure.productId}, #{measure.measurement}, #{measure.UOM_name}, #{measure.updateRule})
+        insert into product_measurement (relative_id, product_id, measurement, uom_name, layer_update_rule_id, channel, barcode)
+        values (#{measure.relativeId}, #{measure.productId}, #{measure.measurement}, #{measure.UOM_name}, #{measure.updateRule}, #{channel}, #{measure.anotherBarcode})
     </insert>
 
     <update id="updateMeasureTo">
-        update product_meas_${layer}
+        update product_measurement
         <trim prefix="set" suffixOverrides=",">
             <if test="measure.relativeId != null">relative_id = #{measure.relativeId},</if>
             <if test="measure.productId != null">product_id = #{measure.productId},</if>
             <if test="measure.measurement != null">measurement = #{measure.measurement},</if>
             <if test="measure.UOM_name != null">uom_name = #{measure.UOM_name},</if>
             <if test="measure.updateRule != null">layer_update_rule_id = #{measure.updateRule},</if>
+            <if test="measure.anotherBarcode != null">barcode = #{measure.anotherBarcode}</if>
         </trim>
-        where relative_id = #{relativeId}
+        where relative_id = #{relativeId} and channel = #{channel}
     </update>
 
     <update id="changeUpdateRuleToByProductId">
-        update product_meas_${layer} set
+        update product_measurement set
         layer_update_rule_id = #{updateRule}
-        where product_id = #{productId}
+        where product_id = #{productId} and channel = #{channel}
     </update>
 
-    <select id="getProductMeasByProductIdWithLayer" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{layer} as layer
-        from product_meas_${layer}
-        where product_id = #{productId}
+    <select id="getProductMeasByProductIdWithChannel" resultMap="ProductMeas">
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{channel} as channel, barcode
+        from product_measurement
+        where product_id = #{productId} and channel = #{channel}
     </select>
 
-    <select id="getProductMeasByRelativeIdWithLayer" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{layer} as layer
-        from product_meas_${layer}
-        where relative_id = #{relativeId}
+    <select id="getProductMeasByRelativeIdWithChannel" resultMap="ProductMeas">
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{channel} as channel, barcode
+        from product_measurement
+        where relative_id = #{relativeId} and #{channel}
     </select>
 
-    <select id="bulkGetProductMeasByRelativeIdwithLayer" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{layer} as layer
-        from product_meas_${layer}
+    <select id="bulkGetProductMeasByRelativeIdwithChannel" resultMap="ProductMeas">
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{channel} as channel, barcode
+        from product_measurement
         <where>
             <foreach collection="relativeIds" item="relativeId"
             open="relative_id in (" separator="," close=")" >
@@ -59,22 +61,24 @@
     </select>
 
     <select id="getProductMeasListBySimilarRelativeId" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{layer} as layer
-        from product_meas_${layer}
-        where relative_id like #{relativeId}
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{channel} as channel, barcode
+        from product_measurement
+        where relative_id like #{relativeId} and channel = #{channel}
     </select>
 
     <insert id="measInit" parameterType="String">
-        create table if not exists product_meas_${layer} (
+        create table if not exists product_measurement (
             product_id varchar(20),
             measurement float,
             relative_id varchar(30),
+            barcode varchar(30),
             uom_name varchar(8),
             layer_update_rule_id varchar(2),
+            channel varchar(10),
             unique key (relative_id)
         );
     </insert>
-
+<!-- 
     <select id="checkLayerExists" resultType="Integer" parameterType="String">
         select
             if(isnull(TABLE_NAME), 0, 1)
@@ -84,13 +88,5 @@
             TABLE_name = #{layer} and
             TABLE_SCHEMA like 'inventorydemo' and
             TABLE_TYPE like 'BASE TABLE';
-    </select>
-
-    <insert id="updateRuleInit" parameterType="String">
-        create table product_meas_update_online (
-            layer_id varchar(10),
-            layer_update_rule_id varchar(8),
-            measure float
-        );
-    </insert>
+    </select> -->
 </mapper>

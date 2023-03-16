@@ -5,7 +5,7 @@ public class ProductUOM extends ProductMeasurement {
     public static final String LAYER = "merchant";
 
     @Override
-    public String getLayer() {
+    public String getSalesChannel() {
         return LAYER;
     }
 }

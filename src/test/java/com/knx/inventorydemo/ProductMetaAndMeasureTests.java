@@ -50,12 +50,12 @@ public class ProductMetaAndMeasureTests {
             .setMeasurement(1)
             .setRelativeId("2232001")
             .setUOM_name(null)
-            .setLayer("online");
+            .setSalesChannel("online");
 
         productMeasChild = new ProductMeasurement()
             .setProductId(productChild.getId())
             .setMeasurement(1)
-            .setLayer("online")
+            .setSalesChannel("online")
             .setUOM_name(null);
     }
 
@@ -70,7 +70,7 @@ public class ProductMetaAndMeasureTests {
     public void addOneCustomMeasurement(){
         measurementService.addNewMeasurementToProduct(product, productMeas);
 
-        measurementService.findAllCustomMeasurementByProductId(productMeas.getLayer(), product.getId());
+        measurementService.findAllCustomMeasurementByProductId(productMeas.getSalesChannel(), product.getId());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class ProductMetaAndMeasureTests {
         productMeas.setRelativeId(newSku);
 
         assertEquals(productMeas.getRelativeId() + "-a", measurementService.findAllCustomMeasurementByProductId(
-            productMeas.getLayer(), productMeas.getProductId()).get(0).getRelativeId());
+            productMeas.getSalesChannel(), productMeas.getProductId()).get(0).getRelativeId());
     }
 
     // @Test
