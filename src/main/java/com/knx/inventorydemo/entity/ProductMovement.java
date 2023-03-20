@@ -5,6 +5,15 @@ public class ProductMovement {
     private String productId;
     private String usedUOM;
     private double quantity;
+    private boolean originMeas;
+
+    public boolean isOriginMeas() {
+        return originMeas;
+    }
+
+    public void setOriginMeas(boolean originMeas) {
+        this.originMeas = originMeas;
+    }
 
     public String getProductId() {
         return productId;

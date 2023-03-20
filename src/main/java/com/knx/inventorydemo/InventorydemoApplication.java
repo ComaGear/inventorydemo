@@ -17,6 +17,8 @@ import com.knx.inventorydemo.Service.ProductService;
 import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 import com.knx.inventorydemo.mapper.ProductMetaMapper;
+import com.knx.inventorydemo.mapper.ProductMovementMapper;
+import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
 @SpringBootApplication
 @MapperScan("com.knx.inventorydemo.mapper")
@@ -41,6 +43,9 @@ public class InventorydemoApplication {
 
 		configuration.addMapper(ProductMetaMapper.class);
 		configuration.addMapper(ProductMeasurementMapper.class);
+		//TODO: un annotation it. and register implement xml file and register spring bean.
+		// configuration.addMapper(ProductStockingMapper.class);
+		// configuration.addMapper(ProductMovementMapper.class);
 
 		return factory;
 	}
