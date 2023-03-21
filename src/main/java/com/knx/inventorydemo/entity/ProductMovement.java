@@ -2,10 +2,38 @@ package com.knx.inventorydemo.entity;
 
 public class ProductMovement {
 
+    private String relativeId;
     private String productId;
     private String usedUOM;
     private double quantity;
     private boolean originMeas;
+    private boolean isStockIn;
+    private boolean isSales;
+
+    public String getRelativeId() {
+        return relativeId;
+    }
+
+    public void setRelativeId(String relativeId) {
+        this.relativeId = relativeId;
+    }
+
+
+    public boolean isSales() {
+        return isSales;
+    }
+
+    public void setSales(boolean isSales) {
+        this.isSales = isSales;
+    }
+
+    public boolean isStockIn() {
+        return isStockIn;
+    }
+
+    public void setStockIn(boolean isStockIn) {
+        this.isStockIn = isStockIn;
+    }
 
     public boolean isOriginMeas() {
         return originMeas;

@@ -59,6 +59,10 @@ public class ProductMetaAndMeasureTests {
             .setUOM_name(null);
     }
 
+    //TODO: test for update inserted product meta and change product id also change measure's relation
+    //TODO: delete product meta with all measurement relate it.
+    //TODO: change measurement relative id.
+
     @Test
     public void addOneProductAndMerchantUOM(){
         productService.addNewProduct(product);
@@ -92,7 +96,6 @@ public class ProductMetaAndMeasureTests {
     //         ,"4t"
     //         ,productMeas.getLayer());
     // }
-
     
 
     public void settingNewUpdateRule(){

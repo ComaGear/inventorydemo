@@ -1,8 +1,13 @@
 package com.knx.inventorydemo.Service;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.ibatis.executor.result.ResultMapException;
 import org.springframework.dao.DataAccessException;
+import org.springframework.lang.NonNull;
 
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
@@ -18,16 +23,11 @@ public class MeasurementService  {
         this.productMeasurementMapper = productMeasurementMapper;
     }
 
-    // public boolean checkLayerExists(String layer) {
-    //     try {
-    //         String t = "product_meas_" + layer;
-    //         int i = productMeasurementMapper.checkLayerExists(t);
-    //         if(i == 1) return true;
-    //     }catch(DataAccessException e){
-    //         throw e;
-    //     }
-    //     return false;
-    // }
+    public boolean checkChannelExist(@NonNull String channel) {
+        List<ProductMeasurement> measList = productMeasurementMapper.getProductMeasListBySimilarRelativeId(channel, "%%" );
+        if(measList.get(0).getSalesChannel() == channel) return true;
+        return false;
+    }
 
     public List<ProductMeasurement> findAllCustomMeasurementByProductId(String layer, String id) {
         if(id == null || id.equals("")) throw new NullPointerException("provided id is null");
@@ -40,6 +40,26 @@ public class MeasurementService  {
     public List<ProductMeasurement> findAllCustomMeasurementByProductId(String id) {
         String layer = ProductUOM.LAYER;
         return findAllCustomMeasurementByProductId(layer, id);
+    }
+
+    public Map<String, ProductMeasurement> getProductMeasByRelativeIdWithChannel(@NonNull List<String> relativeIds, @NonNull String channel) {
+        if(relativeIds.isEmpty()) throw new IllegalArgumentException("relativeIds is empty");
+
+        List<ProductMeasurement> measList = productMeasurementMapper.bulkGetProductMeasByRelativeIdwithChannel(channel, relativeIds);
+
+        if(measList == null || measList.isEmpty()) {
+            if(this.checkChannelExist(channel)){
+                throw new IllegalArgumentException("channel is not exists");
+            }
+            throw new ResultMapException("have not relativeId's measurement exists");
+        }
+
+        HashMap<String, ProductMeasurement> measMap = new HashMap<String, ProductMeasurement>();
+        for(ProductMeasurement meas : measList){
+            measMap.put(meas.getRelativeId(), meas);
+        }
+        
+        return measMap;
     }
 
 
@@ -71,12 +91,15 @@ public class MeasurementService  {
         productMeasurementMapper.addMeasureTo(measurement.getSalesChannel(), measurement);
     }
 
-    private ProductMeasurement getProductMeasByRelativeIdWithChannel(String relativeId, String layer) {
-        if(relativeId == null || relativeId.equals("")) throw new NullPointerException("param of relative id is null");
-        if(layer == null || layer.equals("")) throw new NullPointerException("layer is null");
+    private ProductMeasurement getProductMeasByRelativeIdWithChannel(@NonNull String relativeId, @NonNull String channel) {
+        if(relativeId.equals("")) throw new NullPointerException("param of relative id is null");
+        if(channel.equals("")) throw new NullPointerException("layer is null");
 
-        //implements
-        return productMeasurementMapper.getProductMeasByRelativeIdWithChannel(layer, relativeId);
+        LinkedList<String> linkedList = new LinkedList<String>();
+        linkedList.add(relativeId);
+        Map<String, ProductMeasurement> measMap = this.getProductMeasByRelativeIdWithChannel(linkedList, channel);
+
+        return measMap.get(relativeId);
     }
 
     /**

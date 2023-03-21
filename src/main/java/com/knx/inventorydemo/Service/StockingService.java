@@ -1,8 +1,10 @@
 package com.knx.inventorydemo.Service;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import com.knx.inventorydemo.entity.Order;
 import com.knx.inventorydemo.entity.ProductMovement;
@@ -33,8 +35,19 @@ public class StockingService{
     }
 
     public void pullOriginMeasurement(List<ProductMovement> movements){
-        measurementService
+        // measurementService = nu;
+
+        
     }
+
+    // HashMap<String, ProductMovement> moveMap = new HashMap<>();
+    // Set<ProductMovement> moves = pMovementMapper.bulkGetMovements(null);
+    // Iterator<ProductMovement> iterator = moves.iterator();
+    // while(iterator.hasNext()){
+    //     ProductMovement next = iterator.next();
+    //     moveMap.put(next.getRelativeId(), next);
+    // }
+
 
     public StockingService(){
 

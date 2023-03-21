@@ -54,6 +54,10 @@ public class ProductService {
             .setProductId(productMeta.getId()
         ));
     }
+
+    //TODO: delete product meta
+
+    //TODO: update product meta
        
 
     public List<ProductMeta> getAllProductMeta(){
