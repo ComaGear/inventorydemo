@@ -2,20 +2,86 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.knx.inventorydemo.mapper.ProductMovementMapper">
 
+    <resultMap id="moveOutMap" type="com.knx.inventorydemo.entity.StockMoveOut">
+        <id column="relative_id" property="relativeId" />
+        <result column="product_id" property="productId" />
+        <result column="update_date" property="date"/>
+        <result column="quantity" property="quantity"/>
+        <result column="used_uom" property="usedUOM"/>
+
+        <result column="channel" property="salesChannel"/>
+    </resultMap>
+
+    <resultMap id="MoveInMap" type="com.knx.inventorydemo.entity.StockMoveIn">
+        <id column="relative_id" property="relativeId" />
+        <result column="product_id" property="productId" />
+        <result column="update_date" property="date"/>
+        <result column="quantity" property="quantity"/>
+        <result column="used_uom" property="usedUOM"/>
+
+        <result column="vendor" property="vendorName"/>
+    </resultMap>
+
     
-    <select id="bulkGetMovements">
-        
-    </select>
+    <insert id="bulkInsertMoveIn" parameterType="java.util.List">
+        insert into product_movement 
+            (relative_id, product_id, update_date, quantity, used_uom, vendor)
+        values
+        <foreach collection="moveIns" item="moveIn" index="index" open="(" separator="),(" close=")">
+            #{moveIn.relativeId}, #{moveIn.productId}, #{moveIn.date}, #{moveIn.quantity}, #{moveIn.usedUOM}, #{moveIn.vendor}
+        </foreach>
+    </insert>
+    
+    <insert id="bulkInsertMoveOut" parameterType="java.util.List">
+        insert into product_movement 
+            (relative_id, product_id, update_date, quantity, used_uom, channel)
+        values
+        <foreach collection="moveOuts" item="moveOut" index="index" open="(" separator="),(" close=")">
+            #{moveOut.relativeId}, #{moveOut.productId}, #{moveOut.date}, #{moveOut.quantity}, #{moveOut.usedUOM}, #{moveOut.salesChannel}
+        </foreach>
+    </insert>
+
+    <update id="bulkUpdateMoveIn" parameterType="java.util.List">
+        <foreach collection="moveIns" item="moveIn" index="index" open=" " separator=";" close=";">
+            update product_movement
+                <trim prefix="set" suffixOverrides=",">
+                    <!-- <if test="moveIn.relativeId != null">relative_id = #{moveIn.relativeId}</if> -->
+                    <!-- <if test="moveIn.productId != null">product_id = #{moveIn.productId}</if> -->
+                    <if test="moveIn.quantity != null">quantity = #{moveIn.quantity}</if>
+                    <if test="moveIn.usedUOM != null">used_uom = #{moveIn.usedUOM}</if>
+                    <if test="moveIn.date != null">update_date = #{moveIn.date}</if>
+                    <if test="moveIn.vendorName != null">vendor = #{moveIn.vendorName}</if>
+                </trim>
+            where relative_id = #{relativeId} and product_id = #{productId}
+        </foreach>
+    </update>
+
+    <update id="bulkUpdateMoveOut" parameterType="java.util.List">
+        <foreach collection="moveOuts" item="moveOut" index="index" open=" " separator=";" close=";">
+            update product_movement
+                <trim prefix="set" suffixOverrides=",">
+                    <!-- <if test="moveOut.relativeId != null">relative_id = #{moveOut.relativeId}</if> -->
+                    <!-- <if test="moveOut.productId != null">product_id = #{moveOut.productId}</if> -->
+                    <if test="moveOut.quantity != null">quantity = #{moveOut.quantity}</if>
+                    <if test="moveOut.usedUOM != null">used_uom = #{moveOut.usedUOM}</if>
+                    <if test="moveOut.date != null">update_date = #{moveOut.date}</if>
+                    <if test="moveOut.vendorName != null">vendor = #{moveOut.vendorName}</if>
+                </trim>
+            where relative_id = #{relativeId} and product_id = #{productId}
+        </foreach>
+    </update>
+
+
 
     <insert id="init">
         create table if not exists product_movement (
+            relative_id varchar(20) not null,
             product_id varchar(20) not null,
             update_date date not null,
             quantity double not null,
             used_uom varchar(8) not null default "UNIT"
-            vendor_from varchar(20),
-            sell_to varchar(8),
-            order_id varchar(20)
+            vendor varchar(20),
+            channel varchar(8),
         );
     </insert>
 </mapper>

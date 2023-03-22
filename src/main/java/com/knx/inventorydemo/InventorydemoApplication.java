@@ -17,8 +17,6 @@ import com.knx.inventorydemo.Service.ProductService;
 import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 import com.knx.inventorydemo.mapper.ProductMetaMapper;
-import com.knx.inventorydemo.mapper.ProductMovementMapper;
-import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
 @SpringBootApplication
 @MapperScan("com.knx.inventorydemo.mapper")

@@ -6,13 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.executor.result.ResultMapException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.lang.NonNull;
 
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.entity.ProductUOM;
-import com.knx.inventorydemo.exception.UnkrownLayerException;
 import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 
 public class MeasurementService  {
@@ -91,9 +89,9 @@ public class MeasurementService  {
         productMeasurementMapper.addMeasureTo(measurement.getSalesChannel(), measurement);
     }
 
-    private ProductMeasurement getProductMeasByRelativeIdWithChannel(@NonNull String relativeId, @NonNull String channel) {
-        if(relativeId.equals("")) throw new NullPointerException("param of relative id is null");
-        if(channel.equals("")) throw new NullPointerException("layer is null");
+    private ProductMeasurement getProductMeasByRelativeIdWithChannel(String relativeId, String channel) {
+        if(relativeId == null ||relativeId.equals("")) throw new NullPointerException("param of relative id is null");
+        if(channel == null || channel.equals("")) throw new NullPointerException("layer is null");
 
         LinkedList<String> linkedList = new LinkedList<String>();
         linkedList.add(relativeId);
