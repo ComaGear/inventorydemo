@@ -71,7 +71,76 @@
         </foreach>
     </update>
 
+    <select id="bulkGetMoveIn" resultMap="MoveInMap">
+        select * from product_movement
+        where relative_id in
+        <foreach collection="relativeIds" index="index" item="relativeId" open="(" close=")" separator=",">
+            #{relativeId}
+        </foreach>
+    </select>
 
+    <select id="bulkGetMoveOut" resultMap="MoveOutMap">
+        select * from product_movement
+        where relative_id in
+        <foreach collection="relativeIds" index="index" item="relativeId" open="(" close=")" separator=",">
+            #{relativeId}
+        </foreach>
+    </select>
+
+    <select id="bulkGetMoveInByProductId" resultMap="MoveInMap">
+        select * from product_movement
+        where product_id in
+        <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+    </select>
+
+    <select id="bulkGetMoveOutByProductId" resultMap="MoveOutMap">
+        select * from product_movement
+        where product_id in
+        <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+    </select>
+
+    <select id="bulkGetMoveInByProductId" resultMap="MoveInMap">
+        select * from product_movement
+        where product_id in
+        <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+        and update_date &gt; #{startDate} and update_date &lt; #{endDate}
+    </select>
+
+    <select id="bulkGetMoveOutByProductId" resultMap="MoveOutMap">
+        select * from product_movement
+        where product_id in
+        <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+        and update_date &gt; #{startDate} and update_date &lt; #{endDate}
+    </select>
+
+    <select id="bulkGetMoveInSpecifyDate" resultMap="MoveInMap">
+        select * from product_movement
+        where update_date &gt; #{startDate} and update_date &lt; #{endDate}
+    </select>
+
+    <select id="bulkGetMoveOutSpecifyDate" resultMap="MoveOutMap">
+        select * from product_movement
+        where update_date &gt; #{startDate} and update_date &lt; #{endDate}
+    </select>
+
+    <delete id="bulkDeleteMovements" parameterType="java.util.List">
+        delete LOW_PRIORITY product_movement where product_id in
+        <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+        and relative_id in
+        <foreach collection="relativeIds" index="index" item="relativeId" open="(" close=")" separator=",">
+            #{relativeId}
+        </foreach>
+    </delete>
 
     <insert id="init">
         create table if not exists product_movement (
@@ -79,9 +148,9 @@
             product_id varchar(20) not null,
             update_date date not null,
             quantity double not null,
-            used_uom varchar(8) not null default "UNIT"
+            used_uom varchar(8) not null default "UNIT",
             vendor varchar(20),
-            channel varchar(8),
+            channel varchar(8)
         );
     </insert>
 </mapper>

@@ -7,7 +7,6 @@ import java.util.Set;
 import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;
-import com.knx.inventorydemo.entity.ProductMovement.relativeAndProductId;
 
 public interface ProductMovementMapper {
     
@@ -19,16 +18,23 @@ public interface ProductMovementMapper {
 
     public int bulkUpdateMoveOut(List<StockMoveIn> moveOuts, String relativeId, String productId);
 
-    //TODO: following to implements
-    public Set<ProductMovement> bulkGetMovements(List<String> relativeIds);
+    public Set<ProductMovement> bulkGetMoveIn(List<String> relativeIds);
 
-    public Set<ProductMovement> bulkGetMovementsByProductId(List<String> productIds);
+    public Set<ProductMovement> bulkGetMoveOut(List<String> relativeIds);
 
-    public Set<ProductMovement> bulkGetMovementsByProductId(List<String> productIds, Date startDate, Date endDate);
+    public Set<ProductMovement> bulkGetMoveInByProductId(List<String> productIds);
 
-    public Set<ProductMovement> bulkGetMovementsSpecifyDate(Date startDate, Date endDate);
+    public Set<ProductMovement> bulkGetMoveOutByProductId(List<String> productIds);
 
-    public int bulkDeleteMovements(List<relativeAndProductId> relativeAndProductIds);
+    public Set<ProductMovement> bulkGetMoveInByProductId(List<String> productIds, Date startDate, Date endDate);
+
+    public Set<ProductMovement> bulkGetMoveOutByProductId(List<String> productIds, Date startDate, Date endDate);
+
+    public Set<ProductMovement> bulkGetMoveInSpecifyDate(Date startDate, Date endDate);
+
+    public Set<ProductMovement> bulkGetMoveOutSpecifyDate(Date startDate, Date endDate);
+
+    public int bulkDeleteMovements(List<String> relativeIds, List<String> productIds);
 
     public void init();
 }

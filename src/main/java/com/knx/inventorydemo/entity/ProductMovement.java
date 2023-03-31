@@ -9,9 +9,18 @@ public class ProductMovement {
     private String usedUOM;
     private Date date;
     private double quantity;
+    private String salesChannel;
 
     // not in database
     private boolean originMeas;
+
+    public String getSalesChannel() {
+        return salesChannel;
+    }
+
+    public void setSalesChannel(String salesChannel) {
+        this.salesChannel = salesChannel;
+    }
 
     public Date getDate() {
         return date;
@@ -59,26 +68,6 @@ public class ProductMovement {
 
     public void setUsedUOM(String usedUOM) {
         this.usedUOM = usedUOM;
-    }
-
-    
-    public class relativeAndProductId{
-        private String relativeId;
-        private String ProductId;
-
-        public String getRelativeId() {
-            return relativeId;
-        }
-        public void setRelativeId(String relativeId) {
-            this.relativeId = relativeId;
-        }
-        
-        public String getProductId() {
-            return ProductId;
-        }
-        public void setProductId(String productId) {
-            ProductId = productId;
-        }
     }
 
 }
