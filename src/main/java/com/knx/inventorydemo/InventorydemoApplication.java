@@ -14,9 +14,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import com.knx.inventorydemo.Service.MeasurementService;
 import com.knx.inventorydemo.Service.ProductService;
+import com.knx.inventorydemo.Service.StockingService;
 import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 import com.knx.inventorydemo.mapper.ProductMetaMapper;
+import com.knx.inventorydemo.mapper.ProductMovementMapper;
+import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
 @SpringBootApplication
 @MapperScan("com.knx.inventorydemo.mapper")
@@ -41,6 +44,8 @@ public class InventorydemoApplication {
 
 		configuration.addMapper(ProductMetaMapper.class);
 		configuration.addMapper(ProductMeasurementMapper.class);
+		configuration.addMapper(ProductMovementMapper.class);
+		configuration.addMapper(ProductStockingMapper.class);
 		//TODO: un annotation it. and register implement xml file and register spring bean.
 		// configuration.addMapper(ProductStockingMapper.class);
 		// configuration.addMapper(ProductMovementMapper.class);
@@ -60,6 +65,18 @@ public class InventorydemoApplication {
 		SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(sqlSessionFactory);
 		return sqlSessionTemplate.getMapper(ProductMeasurementMapper.class);
 	}
+
+	@Bean
+	public ProductMovementMapper productMovementMapper(@Autowired SqlSessionFactory sqlSessionFactory){
+		SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(sqlSessionFactory);
+		return sqlSessionTemplate.getMapper(ProductMovementMapper.class);
+	}
+
+	@Bean
+	public ProductStockingMapper productStockingMapper(@Autowired SqlSessionFactory sqlSessionFactory){
+		SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(sqlSessionFactory);
+		return sqlSessionTemplate.getMapper(ProductStockingMapper.class);
+	}
 	
 	@Bean
 	public ProductService productService(@Autowired ProductMetaMapper productMetaMapper){
@@ -68,13 +85,21 @@ public class InventorydemoApplication {
 		return productService;
 	}
 
-	@Bean MeasurementService measurementService(@Autowired ProductService productService, @Autowired ProductMeasurementMapper productMeasurementMapper){
+	@Bean 
+	public MeasurementService measurementService(@Autowired ProductService productService, @Autowired ProductMeasurementMapper productMeasurementMapper){
 		MeasurementService measurementService = new MeasurementService(productMeasurementMapper);
 		productService.setMeasurementService(measurementService);
-		measurementService.init(null);
-		measurementService.init("online");
+		measurementService.init();
 		return measurementService;
 	}
+
+	@Bean
+	public StockingService stockingService(@Autowired ProductStockingMapper productStockingMapper, 
+		@Autowired ProductMovementMapper productMovementMapper, @Autowired MeasurementService measurementService){
+			StockingService stockingService = new StockingService(productStockingMapper, productMovementMapper, measurementService);
+			stockingService.init();
+			return stockingService;
+		}
 
 	// TODO: base init of ProductUOM's Update Rule
 }

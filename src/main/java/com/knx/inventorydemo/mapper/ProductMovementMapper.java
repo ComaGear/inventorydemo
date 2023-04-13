@@ -26,9 +26,9 @@ public interface ProductMovementMapper {
 
     public Set<ProductMovement> bulkGetMoveOutByProductId(List<String> productIds);
 
-    public Set<ProductMovement> bulkGetMoveInByProductId(List<String> productIds, Date startDate, Date endDate);
+    public Set<ProductMovement> bulkGetMoveInByProductIdInDate(List<String> productIds, Date startDate, Date endDate);
 
-    public Set<ProductMovement> bulkGetMoveOutByProductId(List<String> productIds, Date startDate, Date endDate);
+    public Set<ProductMovement> bulkGetMoveOutByProductIdInDate(List<String> productIds, Date startDate, Date endDate);
 
     public Set<ProductMovement> bulkGetMoveInSpecifyDate(Date startDate, Date endDate);
 

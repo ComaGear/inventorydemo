@@ -18,56 +18,63 @@ public class ProductMovement {
         return salesChannel;
     }
 
-    public void setSalesChannel(String salesChannel) {
+    public ProductMovement setSalesChannel(String salesChannel) {
         this.salesChannel = salesChannel;
+        return this;
     }
 
     public Date getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public ProductMovement setDate(Date date) {
         this.date = date;
+        return this;
     }
 
     public String getRelativeId() {
         return relativeId;
     }
 
-    public void setRelativeId(String relativeId) {
+    public ProductMovement setRelativeId(String relativeId) {
         this.relativeId = relativeId;
+        return this;
     }
 
     public boolean isOriginMeas() {
         return originMeas;
     }
 
-    public void setOriginMeas(boolean originMeas) {
+    public ProductMovement setOriginMeas(boolean originMeas) {
         this.originMeas = originMeas;
+        return this;
     }
 
     public String getProductId() {
         return productId;
     }
 
-    public void setProductId(String productId) {
+    public ProductMovement setProductId(String productId) {
         this.productId = productId;
+        return this;
     }
 
     public double getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(double quantity) {
+    public ProductMovement setQuantity(double quantity) {
         this.quantity = quantity;
+        return this;
     }
 
     public String getUsedUOM() {
         return usedUOM;
     }
 
-    public void setUsedUOM(String usedUOM) {
+    public ProductMovement setUsedUOM(String usedUOM) {
         this.usedUOM = usedUOM;
+        return this;
     }
 
 }

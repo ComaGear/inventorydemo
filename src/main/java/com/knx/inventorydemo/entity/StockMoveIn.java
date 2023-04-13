@@ -8,7 +8,8 @@ public class StockMoveIn extends ProductMovement {
         return vendorName;
     }
 
-    public void setVendorName(String vendorName) {
+    public StockMoveIn setVendorName(String vendorName) {
         this.vendorName = vendorName;
+        return this;
     }
 }

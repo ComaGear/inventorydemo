@@ -66,7 +66,7 @@
         where relative_id like #{relativeId} and channel = #{channel}
     </select>
 
-    <insert id="measInit" parameterType="String">
+    <insert id="measInit">
         create table if not exists product_measurement (
             product_id varchar(20),
             measurement float,

@@ -1,7 +1,10 @@
 package com.knx.inventorydemo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.assertj.core.api.Assert;
@@ -75,6 +78,19 @@ public class ProductMetaAndMeasureTests {
         measurementService.addNewMeasurementToProduct(product, productMeas);
 
         measurementService.findAllCustomMeasurementByProductId(productMeas.getSalesChannel(), product.getId());
+    }
+
+    @Test
+    public void obtainMeasurementByBulkGetShouldSuccess(){
+        LinkedList<String> relativeIds = new LinkedList<String>();
+        String m1 = "2232001-a";
+        relativeIds.add(m1);
+        String m2 = "2232001";
+        relativeIds.add(m2);
+
+        Map<String, ProductMeasurement> returnList = measurementService.getProductMeasByRelativeIdWithChannel(relativeIds, "online");
+
+        assertEquals(returnList.get(m1).getProductId(), "9667");
     }
 
     @Test

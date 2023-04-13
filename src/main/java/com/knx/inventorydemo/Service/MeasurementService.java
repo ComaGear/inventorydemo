@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.executor.result.ResultMapException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 
 import com.knx.inventorydemo.entity.ProductMeasurement;
@@ -15,13 +17,15 @@ import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 
 public class MeasurementService  {
 
+    static Logger logger = LoggerFactory.getLogger(MeasurementService.class);
+
     private ProductMeasurementMapper productMeasurementMapper;
 
     public MeasurementService(ProductMeasurementMapper productMeasurementMapper) {
         this.productMeasurementMapper = productMeasurementMapper;
     }
 
-    public boolean checkChannelExist(@NonNull String channel) {
+    public boolean checkChannelExist(String channel) {
         List<ProductMeasurement> measList = productMeasurementMapper.getProductMeasListBySimilarRelativeId(channel, "%%" );
         if(measList.get(0).getSalesChannel() == channel) return true;
         return false;
@@ -40,10 +44,14 @@ public class MeasurementService  {
         return findAllCustomMeasurementByProductId(layer, id);
     }
 
-    public Map<String, ProductMeasurement> getProductMeasByRelativeIdWithChannel(@NonNull List<String> relativeIds, @NonNull String channel) {
+    public Map<String, ProductMeasurement> getProductMeasByRelativeIdWithChannel(List<String> relativeIds, String channel) {
         if(relativeIds.isEmpty()) throw new IllegalArgumentException("relativeIds is empty");
 
+        // logger.info(relativeIds.toString());
+
         List<ProductMeasurement> measList = productMeasurementMapper.bulkGetProductMeasByRelativeIdwithChannel(channel, relativeIds);
+
+        // logger.info(measList.toString());
 
         if(measList == null || measList.isEmpty()) {
             if(this.checkChannelExist(channel)){
@@ -76,7 +84,18 @@ public class MeasurementService  {
 
         // checking param ProductMeasurement existence.
         if(measurement.getRelativeId() != null){
-            ProductMeasurement checkingMeasurement = this.getProductMeasByRelativeIdWithChannel(measurement.getRelativeId(), measurement.getSalesChannel());
+            LinkedList<String> relativeIds = new LinkedList<String>();
+            
+            // check income product measurement contains "-" as child, and then obtain parent sku.
+            String parentSku = measurement.getRelativeId();
+            if(parentSku.contains("-")) {
+                int index = parentSku.indexOf("-");
+                parentSku = parentSku.substring(0, index);
+            }
+
+            relativeIds.add(measurement.getRelativeId());
+            relativeIds.add(parentSku + "-a");
+            ProductMeasurement checkingMeasurement = this.getProductMeasByRelativeIdWithChannel(relativeIds, measurement.getSalesChannel()).get(measurement.getRelativeId());
             if(checkingMeasurement != null && checkingMeasurement.getProductId() != null) return; // measurement relative id is already exist.
         }
 
@@ -170,7 +189,7 @@ public class MeasurementService  {
         return parentSku;
     }
 
-    public void init(String layer) {
+    public void init() {
         productMeasurementMapper.measInit();
         // TODO: Update Rule Setting 
     }

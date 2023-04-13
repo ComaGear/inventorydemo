@@ -7,7 +7,8 @@ public class StockMoveOut extends ProductMovement {
         return salesChannel;
     }
 
-    public void setSalesChannel(String salesChannel) {
+    public StockMoveOut setSalesChannel(String salesChannel) {
         this.salesChannel = salesChannel;
+        return this;
     }
 }

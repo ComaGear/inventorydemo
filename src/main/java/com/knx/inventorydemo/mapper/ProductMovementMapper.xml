@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.knx.inventorydemo.mapper.ProductMovementMapper">
 
-    <resultMap id="moveOutMap" type="com.knx.inventorydemo.entity.StockMoveOut">
+    <resultMap id="MoveOutMap" type="com.knx.inventorydemo.entity.StockMoveOut">
         <id column="relative_id" property="relativeId" />
         <result column="product_id" property="productId" />
         <result column="update_date" property="date"/>
@@ -103,7 +103,7 @@
         </foreach>
     </select>
 
-    <select id="bulkGetMoveInByProductId" resultMap="MoveInMap">
+    <select id="bulkGetMoveInByProductIdInDate" resultMap="MoveInMap">
         select * from product_movement
         where product_id in
         <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
@@ -112,7 +112,7 @@
         and update_date &gt; #{startDate} and update_date &lt; #{endDate}
     </select>
 
-    <select id="bulkGetMoveOutByProductId" resultMap="MoveOutMap">
+    <select id="bulkGetMoveOutByProductIdInDate" resultMap="MoveOutMap">
         select * from product_movement
         where product_id in
         <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">

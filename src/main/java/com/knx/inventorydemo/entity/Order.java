@@ -17,37 +17,50 @@ public class Order {
         return channel;
     }
 
-    public void setChannel(String channel) {
+    public Order setChannel(String channel) {
         this.channel = channel;
+        return this;
     }
     
     public String getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(String orderId) {
+    public Order setOrderId(String orderId) {
         this.orderId = orderId;
+        return this;
     }
 
     public String getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public Order setStatus(String status) {
         this.status = status;
+        return this;
     }
 
     public Date getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public Order setDate(Date date) {
         this.date = date;
+        return this;
     }
 
 
     public Set<ProductMovement> getMovements(){
         return productMovements;
+    }
+
+    public Order pushMovement(ProductMovement moves){
+        if(moves == null) throw new NullPointerException("moves is null");
+        if(moves.getProductId().isEmpty() || moves.getProductId().equals("")
+            || moves.getQuantity() == 0) throw new IllegalArgumentException("moves's product id is emptry");
+
+        this.productMovements.add(moves);
+        return this;
     }
 
     public boolean hasMovement(){
