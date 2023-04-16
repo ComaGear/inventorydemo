@@ -1,7 +1,6 @@
 package com.knx.inventorydemo.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,23 +8,43 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.knx.inventorydemo.entity.Order;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMovement;
+import com.knx.inventorydemo.entity.StockMoveOut;
 import com.knx.inventorydemo.mapper.ProductMovementMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
 public class StockingService{
 
+    static Logger logger = LoggerFactory.getLogger(StockingService.class);
+
     private ProductStockingMapper pStockingMapper;
     private ProductMovementMapper pMovementMapper;
     private MeasurementService measurementService;
+    private ProductService productService;
 
-    private PriorityBlockingQueue<ProductMovement> pendingMovements;
+    private BlockingQueue<ProductMovement> pendingMovements;
+
+    public boolean updateToRepository(){
+
+        if(pendingMovements.isEmpty()) return false;
+        LinkedList<ProductMovement> beingMovements = new LinkedList<ProductMovement>();
+        pendingMovements.drainTo(beingMovements);
+
+        return true;
+    }
 
     public void pushMovement(ProductMovement movement){
+
+        // TODO checking movement's product id activity.
+        productService.getProductUnactivity(movement.getProductId());
         pendingMovements.add(movement);
     }
 
@@ -53,18 +72,15 @@ public class StockingService{
 
         if(pendingMovements.isEmpty()) return null;
 
-        ProductMovement[] MovementArray = (ProductMovement[]) pendingMovements.toArray();
-        List<ProductMovement> movementList = Arrays.asList(MovementArray);
-
-        // MovementList.sort(new Comparator<ProductMovement>() {
-        //     @Override
-        //     public int compare(ProductMovement o1, ProductMovement o2) {
-
-        //         if(o1.getProductId() == o2.getProductId()) return 0;
-
-        //         return o1.getProductId().compareToIgnoreCase(o2.getProductId());
-        //     }
-        // });
+        LinkedList<ProductMovement> movementList = new LinkedList<ProductMovement>();
+        Object[] array = pendingMovements.toArray();
+        for(Object o : array){
+            if(o instanceof StockMoveOut) {
+                StockMoveOut movesMovement = (StockMoveOut) o;
+                movementList.add(movesMovement);
+            }
+        }
+        
         movementList.sort(new Comparator<ProductMovement>() {
             @Override
             public int compare(ProductMovement o1, ProductMovement o2) {
@@ -83,20 +99,29 @@ public class StockingService{
             }
         });
 
+        logger.info("movementList is :" + movementList.toString());
+        logger.info("relativeIds is :" + relativeIds.toString());
+
         LinkedList<ProductMovement> linkedList = new LinkedList<ProductMovement>();
         int lastFoundIndex = 0;
         int relativeIdsIndex = 0;
         int movementIndex = 0;
         for( ; relativeIdsIndex < relativeIds.size(); relativeIdsIndex++){
+
             if(movementList.get(movementIndex).getRelativeId() == relativeIds.get(relativeIdsIndex)){
                 linkedList.add(movementList.get(movementIndex));
 
                 lastFoundIndex = movementIndex;
-                continue;
-            }
 
-            if(movementIndex >= movementList.size()) {
-                movementIndex = lastFoundIndex;
+                if((relativeIdsIndex + 1) != relativeIds.size()) {
+                    if(relativeIds.get(relativeIdsIndex + 1) != relativeIds.get(relativeIdsIndex)){
+                        movementIndex++;
+                    } else {
+                        continue;
+                    }
+                } else {
+                    movementIndex++;
+                }
             }
 
             for( ; movementIndex < movementList.size(); movementIndex++){
@@ -104,12 +129,27 @@ public class StockingService{
                     linkedList.add(movementList.get(movementIndex));
     
                     lastFoundIndex = movementIndex;
+
+                    if((movementIndex + 1) < movementList.size() &&
+                        movementList.get(movementIndex + 1) != movementList.get(movementIndex)){
+
+                        continue;
+                    }
                     break;
                 }
             }
+
+            if(movementIndex >= movementList.size()) {
+                movementIndex = lastFoundIndex;
+            }
+            
         }
 
         return linkedList;
+    }
+
+    public void clearPushedMovements() {
+        this.pendingMovements.clear();
     }
 
     /**
@@ -120,7 +160,7 @@ public class StockingService{
      */
     public HashMap<String, Map<String, ProductMeasurement>> pullOriginMeasurement(List<ProductMovement> movements){
 
-        //TODO: null point check.
+        if(movements == null || movements.isEmpty()) throw new NullPointerException("movements is null or empty");
 
         HashMap<String, List<String>> channelMovementMap = new HashMap<String, List<String>>();
         Set<String> channelKeySet = channelMovementMap.keySet();
@@ -146,15 +186,6 @@ public class StockingService{
         return resultMovementMap;
     }
 
-    // HashMap<String, ProductMovement> moveMap = new HashMap<>();
-    // Set<ProductMovement> moves = pMovementMapper.bulkGetMovements(null);
-    // Iterator<ProductMovement> iterator = moves.iterator();
-    // while(iterator.hasNext()){
-    //     ProductMovement next = iterator.next();
-    //     moveMap.put(next.getRelativeId(), next);
-    // }
-
-
     public StockingService(){
         pendingMovements = new PriorityBlockingQueue<>();
     }
@@ -169,13 +200,5 @@ public class StockingService{
     public void init() {
         //TODO:
     }
-
-    // private class SynchronizedMovementQueue{
-    //     private Queue<ProductMovement> pendingMovements;
-
-    //     public SynchronizedMovementQueue() {
-    //         this.pendingMovements = new queue
-    //     }
-    // }
     
 }

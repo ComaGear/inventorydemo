@@ -1,13 +1,16 @@
 package com.knx.inventorydemo;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -22,6 +25,8 @@ import com.knx.inventorydemo.entity.StockMoveOut;
 @SpringBootTest
 public class StockingBehaveTest {
 
+
+    static Logger log = LoggerFactory.getLogger(StockingBehaveTest.class);
     private static final String UNIT = "UNIT";
     private static final String ORIGIN = "merchant";
     @Autowired
@@ -30,8 +35,10 @@ public class StockingBehaveTest {
     ProductService productService;
 
     ProductMeta product;
+    private Order multiMovesOrder;
+    private Order singleMovesOrder;
 
-    @BeforeAll
+    @BeforeEach
     public void setupProductEntity(){
         product = new ProductMeta()
             .setId("9667")
@@ -45,43 +52,109 @@ public class StockingBehaveTest {
                 .setUOM_name("CTN")
                 .setSalesChannel(ORIGIN);
 
+        multiMovesOrder = new Order()
+                .setOrderId("20230105WEW")
+                .setChannel(ORIGIN);
+    
+        multiMovesOrder.pushMovement(new StockMoveOut()
+                .setRelativeId(multiMovesOrder.getOrderId())
+                .setProductId(product.getId())
+                .setDate(Date.valueOf(LocalDate.now()))
+                .setQuantity(2)
+                .setUsedUOM(UNIT)
+                .setSalesChannel(multiMovesOrder.getChannel()))
+            .pushMovement(new StockMoveOut()
+                .setRelativeId(multiMovesOrder.getOrderId())
+                .setProductId(product.getId())
+                .setDate(Date.valueOf(LocalDate.now()))
+                .setQuantity(5)
+                .setUsedUOM(UNIT)
+                .setSalesChannel(multiMovesOrder.getChannel()));
+
+        singleMovesOrder = new Order()
+            .setOrderId("220230505UE")
+            .setChannel(ORIGIN);
+        
+        singleMovesOrder.pushMovement(new StockMoveOut()
+                .setRelativeId(singleMovesOrder.getOrderId())
+                .setProductId(product.getId())
+                .setDate(Date.valueOf(LocalDate.now()))
+                .setQuantity(2)
+                .setUsedUOM(UNIT)
+                .setSalesChannel(singleMovesOrder.getChannel()));
+
     }
 
     @Test
     public void checkQueuePuttedListOfMovementWhenClean(){
         // first putting to clean queue
-
-        Order order = new Order()
-            .setOrderId("20230105WEW")
-            .setChannel(ORIGIN);
-
-        order.pushMovement(new StockMoveOut()
-                .setRelativeId(order.getOrderId())
-                .setProductId(product.getId())
-                .setDate(Date.valueOf(LocalDate.now()))
-                .setQuantity(2)
-                .setUsedUOM(UNIT)
-                .setSalesChannel(order.getChannel()))
-            .pushMovement(new StockMoveOut()
-                .setRelativeId(order.getOrderId())
-                .setProductId(product.getId())
-                .setDate(Date.valueOf(LocalDate.now()))
-                .setQuantity(5)
-                .setUsedUOM(UNIT)
-                .setSalesChannel(order.getChannel()));
+        stockingService.clearPushedMovements();
         
-        stockingService.pushMovement(order);
+        stockingService.pushMovement(multiMovesOrder);
 
         List<String> list = new LinkedList<>();
-        list.add(order.getOrderId());
+        list.add(multiMovesOrder.getOrderId());
         List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByRelativeId(list);
+        
+        boolean equals = multiMovesOrder.getMovements().size() == returnList.size();
+        log.info("order's movements size is " + multiMovesOrder.getMovements().size());
+        log.info("returnList size is " + returnList.size());
 
-        boolean equals = order.getMovements().size() == returnList.size();
         assertTrue(equals);
+    }
+
+    @Test
+    public void singleMoveButFetchMultiOrderId(){
+        stockingService.clearPushedMovements();
+
+        List<String> relativeIds = new LinkedList<String>();
+
+        //add a not exist order string
+        relativeIds.add("220230505EE");
+        relativeIds.add("2202305052E");
+
+        stockingService.pushMovement(singleMovesOrder);
+        relativeIds.add(singleMovesOrder.getOrderId());
+
+        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByRelativeId(relativeIds);
+
+        assertEquals(returnList.size(), singleMovesOrder.getMovements().size());
+    }
+
+    @Test
+    public void multiOrderPushedGetSameSize(){
+        stockingService.clearPushedMovements();
+
+        List<String> relativeIds = new LinkedList<String>();
+
+        stockingService.pushMovement(singleMovesOrder);
+        stockingService.pushMovement(multiMovesOrder);
+        relativeIds.add(singleMovesOrder.getOrderId());
+        relativeIds.add(multiMovesOrder.getOrderId());
+
+        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByRelativeId(relativeIds);
+
+        int size = 0;
+        size = singleMovesOrder.getMovements().size() + size;
+        size = multiMovesOrder.getMovements().size() + size;
+
+        assertEquals(size, returnList.size());
     }
 
     @Test 
     public void checkQueuePuttedListOfMovementWhenContent(){
+
+        stockingService.clearPushedMovements();
+
+        List<String> relativeIds = new LinkedList<String>();
+
+        stockingService.pushMovement(singleMovesOrder);
+        stockingService.pushMovement(multiMovesOrder);
+        relativeIds.add(singleMovesOrder.getOrderId());
+
+        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByRelativeId(relativeIds);
+
+        assertEquals(singleMovesOrder.getMovements().size(), returnList.size());
 
     }
 

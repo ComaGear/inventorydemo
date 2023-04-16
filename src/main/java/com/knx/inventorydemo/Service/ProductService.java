@@ -1,5 +1,6 @@
 package com.knx.inventorydemo.Service;
 
+import java.util.HashMap;
 import java.util.List;
 
 import com.knx.inventorydemo.entity.ProductMeasurement;
@@ -92,6 +93,12 @@ public class ProductService {
      */
     public void init() {
         this.productMetaMapper.init();
+    }
+
+    public HashMap<String, Boolean> getProductUnactivity(String productId) {
+        // return a un activity product.
+        // impletement mapper
+        productMetaMapper.getUnactivity();
     }
 
 }

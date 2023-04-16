@@ -1,12 +1,12 @@
 package com.knx.inventorydemo.entity;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Set;
 
 public class Order {
     
     private String orderId;
-    private Set<ProductMovement> productMovements;
+    private ArrayList<ProductMovement> productMovements;
     private String channel;
     private String status;
     private Date date;
@@ -50,7 +50,7 @@ public class Order {
     }
 
 
-    public Set<ProductMovement> getMovements(){
+    public ArrayList<ProductMovement> getMovements(){
         return productMovements;
     }
 
@@ -58,6 +58,8 @@ public class Order {
         if(moves == null) throw new NullPointerException("moves is null");
         if(moves.getProductId().isEmpty() || moves.getProductId().equals("")
             || moves.getQuantity() == 0) throw new IllegalArgumentException("moves's product id is emptry");
+
+        if(this.productMovements == null) productMovements = new ArrayList<>();
 
         this.productMovements.add(moves);
         return this;

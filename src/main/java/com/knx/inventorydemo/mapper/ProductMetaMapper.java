@@ -24,6 +24,8 @@ public interface ProductMetaMapper {
     public int update(ProductMeta productMeta);
 
     public int setActivityById(int id, boolean activity);
+
+    public List<String> bulkCheckUnactivityById(List<String> productIds);
     
     public boolean checkActivityById(int id);
 

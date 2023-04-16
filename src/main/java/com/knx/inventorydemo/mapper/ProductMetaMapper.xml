@@ -53,6 +53,8 @@
     where id = #{id}
   </select>
 
+  <select id="bulkCheckUnactivityById"></select>
+
   <select id="getAll" resultMap="ProductMetaM"> select * from
     product_meta; </select>
 

@@ -8,7 +8,6 @@ import java.util.Map;
 import org.apache.ibatis.executor.result.ResultMapException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.lang.NonNull;
 
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;

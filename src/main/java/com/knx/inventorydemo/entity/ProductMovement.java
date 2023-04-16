@@ -77,4 +77,33 @@ public class ProductMovement {
         return this;
     }
 
+    // @Override
+    // public int compareTo(ProductMovement o) {
+
+    //     if(this.relativeId == null || relativeId.isEmpty()) return -1;
+
+    //     if(this.relativeId.equals(o.getRelativeId())) {
+    //         if(this.productId.equals(o.getProductId())) return 0;
+    //         return this.productId.compareTo(o.getProductId());
+    //     }
+
+    //     return relativeId.compareTo(o.getRelativeId());
+    // }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
+        stringBuilder.append("Product ID: " + getProductId() + ", ");
+        stringBuilder.append("Relative ID: " + getRelativeId() + ", ");
+        stringBuilder.append("Quantity: " + getQuantity() + ", ");
+        stringBuilder.append("UOM: " + getUsedUOM() + ", ");
+        stringBuilder.append("Date: "+ getDate());
+        stringBuilder.append("]");
+
+        return stringBuilder.toString();
+    }
+
+    
+
 }
