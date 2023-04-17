@@ -65,6 +65,7 @@ public class ProductMetaAndMeasureTests {
     //TODO: test for update inserted product meta and change product id also change measure's relation
     //TODO: delete product meta with all measurement relate it.
     //TODO: change measurement relative id.
+    //TODO: test code for checking product activity both get activity and unactivity.
 
     @Test
     public void addOneProductAndMerchantUOM(){

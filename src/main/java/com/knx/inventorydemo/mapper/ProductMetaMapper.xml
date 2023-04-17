@@ -53,7 +53,13 @@
     where id = #{id}
   </select>
 
-  <select id="bulkCheckUnactivityById"></select>
+  <select id="bulkCheckUnactivityById">
+    select id from product_meta
+    where activity = false and id in
+    <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
+      #{productId}
+    </foreach>
+  </select>
 
   <select id="getAll" resultMap="ProductMetaM"> select * from
     product_meta; </select>

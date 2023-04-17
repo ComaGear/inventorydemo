@@ -95,10 +95,12 @@ public class ProductService {
         this.productMetaMapper.init();
     }
 
-    public HashMap<String, Boolean> getProductUnactivity(String productId) {
-        // return a un activity product.
-        // impletement mapper
-        productMetaMapper.getUnactivity();
+    public List<String> getProductUnactivity(List<String> productIds) {
+
+        if(productIds == null || productIds.isEmpty()) throw new NullPointerException("productIDs is null or empty");
+
+        List<String> returnList = productMetaMapper.bulkCheckUnactivityById(productIds);
+        return returnList;
     }
 
 }

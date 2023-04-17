@@ -41,14 +41,19 @@ public class StockingService{
         return true;
     }
 
-    public void pushMovement(ProductMovement movement){
+    public boolean pushMovement(ProductMovement movement){
 
         // TODO checking movement's product id activity.
-        productService.getProductUnactivity(movement.getProductId());
-        pendingMovements.add(movement);
+        LinkedList<String> linkedList = new LinkedList<String>();
+        linkedList.add(movement.getProductId());
+        List<String> returnList = productService.getProductUnactivity(linkedList);
+
+        if(returnList == null || returnList.isEmpty()) pendingMovements.add(movement);
+        if(returnList.get(0).equals(movement.getProductId())) return false;
+        return true;
     }
 
-    public void pushMovement(Order order){
+    public boolean pushMovement(Order order){
         if(order == null || !order.hasMovement()){ throw new NullPointerException("order is null or emptry."); }
         
         Iterator<ProductMovement> iterator = order.getMovements().iterator();
@@ -59,7 +64,7 @@ public class StockingService{
         order.setAnalysed(true);
     }
 
-    public void pushMovement(List<Order> orders){
+    public int pushMovement(List<Order> orders){
         if(orders == null || orders.isEmpty()) throw new NullPointerException("orders is null or emptry");
 
         for(Order order : orders){
