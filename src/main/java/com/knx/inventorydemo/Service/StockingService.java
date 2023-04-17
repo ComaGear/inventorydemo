@@ -41,35 +41,67 @@ public class StockingService{
         return true;
     }
 
-    public boolean pushMovement(ProductMovement movement){
+    /**
+     * @param movement ProductMovement, push movement to pendings movement.
+     * @param skipCheck this using to reduce resource of query, free up checking when already checking by before.
+     * @return pushing result. return true when success.
+     */
+    private boolean pushMovement(ProductMovement movement, boolean skipCheck){
 
         // TODO checking movement's product id activity.
         LinkedList<String> linkedList = new LinkedList<String>();
         linkedList.add(movement.getProductId());
-        List<String> returnList = productService.getProductUnactivity(linkedList);
+        List<String> unactivityList = null;
+        if(!skipCheck) unactivityList = productService.getProductUnactivity(linkedList);
 
-        if(returnList == null || returnList.isEmpty()) pendingMovements.add(movement);
-        if(returnList.get(0).equals(movement.getProductId())) return false;
+        if(unactivityList == null || unactivityList.isEmpty()) pendingMovements.add(movement);
+        if(unactivityList != null && unactivityList.get(0).equals(movement.getProductId())) return false;
         return true;
     }
 
-    public boolean pushMovement(Order order){
-        if(order == null || !order.hasMovement()){ throw new NullPointerException("order is null or emptry."); }
-        
-        Iterator<ProductMovement> iterator = order.getMovements().iterator();
-        while(iterator.hasNext()){
-            ProductMovement moves = iterator.next();
-            pendingMovements.add(moves);
-        }
-        order.setAnalysed(true);
+    public boolean pushMovement(ProductMovement movement){
+        return this.pushMovement(movement, false);
     }
 
-    public int pushMovement(List<Order> orders){
+    public List<ProductMovement> pushMovement(Order order){
+        if(order == null || !order.hasMovement()){ throw new NullPointerException("order is null or emptry."); }
+
+        LinkedList<String> toCheckingList = new LinkedList<String>();
+        Iterator<ProductMovement> iterator = order.getMovements().iterator();
+        for(iterator.hasNext()) {
+            toCheckingList.add(iterator.next().getProductId());
+        }
+        List<String> unactivityList = productService.getProductUnactivity(toCheckingList);
+
+        LinkedList<ProductMovement> unablePushList = new LinkedList<ProductMovement>();
+        
+        Iterator<ProductMovement> iterator = iterator;
+        while(iterator.hasNext()){
+            ProductMovement moves = iterator.next();
+            boolean added = pendingMovements.add(moves);
+            if(!added) {
+                unablePushList.add(moves);
+            }
+        }
+        order.setAnalysed(true);
+        return unablePushList.isEmpty() ? null : unablePushList;
+    }
+
+    public Map<String, List<ProductMovement>> pushMovement(List<Order> orders){
         if(orders == null || orders.isEmpty()) throw new NullPointerException("orders is null or emptry");
 
+        HashMap<String, List<ProductMovement>> unablePushOrders = new HashMap<String, List<ProductMovement>>();
+
         for(Order order : orders){
-            this.pushMovement(order);
+
+            List<ProductMovement> unablePushMovement = this.pushMovement(order);
+            
+            if(unablePushMovement != null){
+                unablePushOrders.put(order.getOrderId(), unablePushMovement);
+            }
         }
+
+        return unablePushOrders.isEmpty() ? null : unablePushOrders;
     }
 
     public List<ProductMovement> fetchMovesQueueMovementByRelativeId(List<String> relativeIds){
@@ -204,6 +236,10 @@ public class StockingService{
 
     public void init() {
         //TODO:
+    }
+
+    public List<ProductMovement> getAllMoveRecord(String productId) {
+        return null;
     }
     
 }

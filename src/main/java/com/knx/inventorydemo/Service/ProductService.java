@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
+import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.ProductUOM;
 import com.knx.inventorydemo.mapper.ProductMetaMapper;
 
@@ -14,6 +15,12 @@ public class ProductService {
 
     MeasurementService measurementService;
 
+    private StockingService stockingService;
+
+
+    public void setStockingService(StockingService stockingService) {
+        this.stockingService = stockingService;
+    }
 
     public void setMeasurementService(MeasurementService measurementService) {
         this.measurementService = measurementService;
@@ -61,22 +68,23 @@ public class ProductService {
      * 
      * @return result of deleting, -1 is unsuccess, 0 is product id not found, 1 is deleted
      */
-    public int delete(ProductMeta){
+    public int delete(ProductMeta productMeta){
 
-        String productId = productMeta.getProductById();
+        String productId = productMeta.getId();
 
         ProductMeta product = productMetaMapper.getProductById(productId);
-        if(product)
+        if(product.getName() == null || product.getName().isEmpty()){
+            return 0;
+        }
 
-        List<ProductMovement> moves = stockingService.getAllMoveRecord(produdctId);
+        List<ProductMovement> moves = stockingService.getAllMoveRecord(productId);
 
         if(moves == null || moves.isEmpty()){
-            int result = productMetaMapper.deleteProductMetaById(ProductMeta.getProductById);
-            return 1;
+            int result = productMetaMapper.deleteProductMetaById(productId);
+            return result == 1 ? 1 : -1;
         } else {
             return -1;
         }
-        return -1;
     }
 
     //TODO: update product meta

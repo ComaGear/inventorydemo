@@ -19,7 +19,7 @@ public interface ProductMetaMapper {
      */
     public List<ProductMeta> getProductByStr(String str);
 
-    public int deleteProductMetaById(int id);
+    public int deleteProductMetaById(String id);
 
     public int update(ProductMeta productMeta);
 
