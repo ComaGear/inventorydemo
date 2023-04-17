@@ -56,7 +56,28 @@ public class ProductService {
         ));
     }
 
-    //TODO: delete product meta
+    /**
+     * delete productMeta specify by product id, only delete the product has not stocking movement record.
+     * 
+     * @return result of deleting, -1 is unsuccess, 0 is product id not found, 1 is deleted
+     */
+    public int delete(ProductMeta){
+
+        String productId = productMeta.getProductById();
+
+        ProductMeta product = productMetaMapper.getProductById(productId);
+        if(product)
+
+        List<ProductMovement> moves = stockingService.getAllMoveRecord(produdctId);
+
+        if(moves == null || moves.isEmpty()){
+            int result = productMetaMapper.deleteProductMetaById(ProductMeta.getProductById);
+            return 1;
+        } else {
+            return -1;
+        }
+        return -1;
+    }
 
     //TODO: update product meta
        
