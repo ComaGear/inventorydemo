@@ -18,6 +18,7 @@ import com.knx.inventorydemo.entity.Order;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.StockMoveOut;
+import com.knx.inventorydemo.exception.ProductUnactivityException;
 import com.knx.inventorydemo.mapper.ProductMovementMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
@@ -37,6 +38,23 @@ public class StockingService{
         if(pendingMovements.isEmpty()) return false;
         LinkedList<ProductMovement> beingMovements = new LinkedList<ProductMovement>();
         pendingMovements.drainTo(beingMovements);
+
+        //insert all being movement to movement table
+        //verify any movement not duplicate in record. if duplicate check any change on the movement, update once.
+        // if any update is about quantity or used uom change. figure down different then adding to being movement,
+        // also remove previous movement has been checked got updated.
+
+
+        // replace all movement's used measurement to origin measurement that product meta matched.
+        // continue update the product meta matched stocking table.
+
+        HashMap<String, Map<String, ProductMeasurement>> originMeasurement = this.pullOriginMeasurement(beingMovements);
+
+        ProductMovement polledMoves = beingMovements.poll();
+        // getting hashMap by sales channel continue getting by product measurement relative id.
+        ProductMeasurement measurement = originMeasurement.get(polledMoves.getSalesChannel())
+            .get(polledMoves.getProductId() + "-" + polledMoves.getUsedUOM());
+        polledMoves.setQuantity(polledMoves.getQuantity() * measurement.getMeasurement());
 
         return true;
     }
@@ -63,22 +81,32 @@ public class StockingService{
         return this.pushMovement(movement, false);
     }
 
+    /**
+     * @param order
+     * @return
+     */
     public List<ProductMovement> pushMovement(Order order){
-        if(order == null || !order.hasMovement()){ throw new NullPointerException("order is null or emptry."); }
+        if(order == null || !order.hasMovement()) { throw new NullPointerException("order is null or emptry."); }
 
         LinkedList<String> toCheckingList = new LinkedList<String>();
-        Iterator<ProductMovement> iterator = order.getMovements().iterator();
-        for(iterator.hasNext()) {
-            toCheckingList.add(iterator.next().getProductId());
+        Iterator<ProductMovement> checkingIterator = order.getMovements().iterator();
+        while(checkingIterator.hasNext()){
+            toCheckingList.add(checkingIterator.next().getProductId());
         }
         List<String> unactivityList = productService.getProductUnactivity(toCheckingList);
 
+        // throw exception return to caller and give a list of unactitvity product to exception member that has given following.
+        if(unactivityList != null && !unactivityList.isEmpty()){
+            ProductUnactivityException exception = new ProductUnactivityException("checked unactivity product has" + unactivityList.toString());
+            exception.setUnactivityProductList(unactivityList);
+            throw exception;
+        }
+
         LinkedList<ProductMovement> unablePushList = new LinkedList<ProductMovement>();
-        
-        Iterator<ProductMovement> iterator = iterator;
+        Iterator<ProductMovement> iterator = order.getMovements().iterator();
         while(iterator.hasNext()){
             ProductMovement moves = iterator.next();
-            boolean added = pendingMovements.add(moves);
+            boolean added = this.pushMovement(moves, true);
             if(!added) {
                 unablePushList.add(moves);
             }
@@ -87,17 +115,27 @@ public class StockingService{
         return unablePushList.isEmpty() ? null : unablePushList;
     }
 
-    public Map<String, List<ProductMovement>> pushMovement(List<Order> orders){
+    public Map<Order, List<String>> pushMovement(List<Order> orders){
         if(orders == null || orders.isEmpty()) throw new NullPointerException("orders is null or emptry");
 
-        HashMap<String, List<ProductMovement>> unablePushOrders = new HashMap<String, List<ProductMovement>>();
+        HashMap<Order, List<String>> unablePushOrders = new HashMap<Order, List<String>>();
+
+        // a list of unable insert to pending cause by contains product is not activity. reject certain order to verify.
+        List<Order> unInsertOrders = new LinkedList<Order>();
 
         for(Order order : orders){
 
-            List<ProductMovement> unablePushMovement = this.pushMovement(order);
-            
-            if(unablePushMovement != null){
-                unablePushOrders.put(order.getOrderId(), unablePushMovement);
+            List<String> unactivityProducts = null;
+
+            try{
+                this.pushMovement(order);
+            } catch(ProductUnactivityException e){ 
+                unactivityProducts = e.getUnactivityProductList(); 
+            }
+
+            if(unactivityProducts != null){
+                unInsertOrders.add(order);
+                unablePushOrders.put(order, unactivityProducts);
             }
         }
 
@@ -210,7 +248,9 @@ public class StockingService{
 
             List<String> relativeIds = channelMovementMap.get(movement.getSalesChannel());
             if(!relativeIds.contains(movement.getRelativeId())){
-                relativeIds.add(movement.getRelativeId());
+                String relativeId = movement.getRelativeId();
+                if(!relativeId.contains("-")) relativeId = relativeId + "-" + movement.getUsedUOM();
+                relativeIds.add(relativeId);
             }
         }
 
