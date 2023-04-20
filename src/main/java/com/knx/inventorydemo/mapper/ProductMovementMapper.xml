@@ -8,6 +8,7 @@
         <result column="update_date" property="date"/>
         <result column="quantity" property="quantity"/>
         <result column="used_uom" property="usedUOM"/>
+        <result column="order_id" property="orderId"/>
 
         <result column="channel" property="salesChannel"/>
     </resultMap>
@@ -103,6 +104,24 @@
         </foreach>
     </select>
 
+    <select id="bulkGetMoveOutByOrderIdsAndProductIds" resultMap="MoveOutMap">
+        select * from product_movement
+        where product_id in 
+        <foreach collection="movements" index="indexP" open="(" separator="," close=")" item="move">
+            #{move.productId}
+        </foreach>
+        and order_id in
+        <foreach collection="movements" index="indexO" open="(" separator="," close=")" item="move">
+            #{move.OrderId}
+        </foreach>
+    </select>
+
+    <select id="bulkGetRecordSizeOfOrderByOrderId">
+        <foreach collection="orderIds" index="index" item="orderId" separator="UNION" open="" close="">
+            select count(*), #{orderId} as order_id from product_movement where order_id = #{orderId}
+        </foreach>
+    </select>
+
     <select id="bulkGetMoveInByProductIdInDate" resultMap="MoveInMap">
         select * from product_movement
         where product_id in
@@ -150,7 +169,8 @@
             quantity double not null,
             used_uom varchar(8) not null default "UNIT",
             vendor varchar(20),
-            channel varchar(8)
+            channel varchar(8),
+            order_id varchar(10)
         );
     </insert>
 </mapper>
