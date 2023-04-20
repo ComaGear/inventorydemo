@@ -116,9 +116,14 @@
         </foreach>
     </select>
 
-    <select id="bulkGetRecordSizeOfOrderByOrderId">
+    <resultMap id="Order" type="com.knx.inventorydemo.entity.Order">
+        <result column="order_id" property="orderId"/>
+        <result column="size" property="size"/>
+    </resultMap>
+
+    <select id="bulkGetRecordSizeOfOrderByOrderId" resultMap="Order">
         <foreach collection="orderIds" index="index" item="orderId" separator="UNION" open="" close="">
-            select count(*), #{orderId} as order_id from product_movement where order_id = #{orderId}
+            select count(*) as size, #{orderId} as order_id from product_movement where order_id = #{orderId}
         </foreach>
     </select>
 

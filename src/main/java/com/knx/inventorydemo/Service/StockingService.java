@@ -1,6 +1,7 @@
 package com.knx.inventorydemo.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.knx.inventorydemo.entity.Order;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMovement;
+import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;
 import com.knx.inventorydemo.exception.ProductUnactivityException;
 import com.knx.inventorydemo.mapper.ProductMovementMapper;
@@ -43,6 +45,45 @@ public class StockingService{
         //verify any movement not duplicate in record. if duplicate check any change on the movement, update once.
         // if any update is about quantity or used uom change. figure down different then adding to being movement,
         // also remove previous movement has been checked got updated.
+
+        HashMap<String, Integer> sizeOfOrder = new HashMap<String, Integer>();
+        Set<String> sizeOfOrderKeySet = sizeOfOrder.keySet();
+        Iterator<ProductMovement> iterator = beingMovements.iterator();
+
+        HashMap<String, List<ProductMovement>> orderMap = new HashMap<String, List<ProductMovement>>();
+
+        while(iterator.hasNext()){
+            ProductMovement next = iterator.next();
+            if(next instanceof StockMoveOut){
+                StockMoveOut moveOut = (StockMoveOut) next;
+                if(!sizeOfOrderKeySet.contains(moveOut.getOrderId())){
+                    sizeOfOrder.put(moveOut.getOrderId(), 1);
+
+                    LinkedList<ProductMovement> linkedList = new LinkedList<ProductMovement>();
+                    linkedList.add(moveOut);
+                    orderMap.put(moveOut.getOrderId(), linkedList);
+                } else {
+                    int i = sizeOfOrder.get(moveOut.getOrderId()) + 1;
+                    sizeOfOrder.put(moveOut.getOrderId(), i);
+
+                    orderMap.get(moveOut.getOrderId()).add(moveOut);
+                }
+            }
+            if(next instanceof StockMoveIn){
+                // TODO: component of stock in implement later
+            }
+        }
+
+        List<String> asList = Arrays.asList((String[]) sizeOfOrderKeySet.toArray());
+        Map<String, Integer> orderSizeReturnMap = pMovementMapper.bulkGetRecordSizeOfOrderByOrderId(asList);
+        Iterator<String> sizeIterator = sizeOfOrderKeySet.iterator();
+        while(sizeIterator.hasNext()){
+            String next = sizeIterator.next();
+            if(sizeOfOrder.get(next).intValue() != (orderSizeReturnMap.get(next)).intValue()){
+                // try to insert a new movement into record
+                List<ProductMovement> movements = orderMap.get(next);
+            }
+        }
 
         pMovementMapper.bulkGetMoveOutByOrderIdsAndProductIds(beingMovements);
 
