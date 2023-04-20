@@ -2,6 +2,7 @@ package com.knx.inventorydemo.mapper;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.knx.inventorydemo.entity.ProductMovement;
@@ -25,6 +26,13 @@ public interface ProductMovementMapper {
     public Set<ProductMovement> bulkGetMoveInByProductId(List<String> productIds);
 
     public Set<ProductMovement> bulkGetMoveOutByProductId(List<String> productIds);
+
+    public List<ProductMovement> bulkGetMoveOutByOrderIdsAndProductIds(List<ProductMovement> movements);
+
+    /**
+     * @return Map key by order Id, value is record count size
+     */
+    public Map<String, Integer> bulkGetRecordSizeOfOrderByOrderId(List<String> orderIds);
 
     public Set<ProductMovement> bulkGetMoveInByProductIdInDate(List<String> productIds, Date startDate, Date endDate);
 

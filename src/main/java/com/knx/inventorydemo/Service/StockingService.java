@@ -44,6 +44,8 @@ public class StockingService{
         // if any update is about quantity or used uom change. figure down different then adding to being movement,
         // also remove previous movement has been checked got updated.
 
+        pMovementMapper.bulkGetMoveOutByOrderIdsAndProductIds(beingMovements);
+
 
         // replace all movement's used measurement to origin measurement that product meta matched.
         // continue update the product meta matched stocking table.
