@@ -231,7 +231,7 @@ public class StockingService{
      * this method getting origin measurement of product meta by specify measurement's relativeId of ProdutMovement. 
      * 
      * @param movements List of ProductMovement
-     * @return Map key by sales channel, and value is map key by ProductMeasurement's relativeId.
+     * @return Map key by sales channel, value is Map contains Measurement key by measurement's relative id such as "9968-unit", Map<SalesChannel, Map<RelativeId, ProductMeasurement>>
      */
     public HashMap<String, Map<String, ProductMeasurement>> pullOriginMeasurement(List<ProductMovement> movements){
 
