@@ -2,8 +2,10 @@ package com.knx.inventorydemo.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,6 +28,9 @@ import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
 public class StockingService{
 
+    private static final String ENSURE_STOCKING_MOVEMENTS = "Ensure Stocking Movements";
+    private static final String ENSURE_STOCKING_MAP = "Ensure Stocking Map";
+
     static Logger logger = LoggerFactory.getLogger(StockingService.class);
 
     private ProductStockingMapper pStockingMapper;
@@ -38,68 +43,128 @@ public class StockingService{
     public boolean updateToRepository(){
 
         if(pendingMovements.isEmpty()) return false;
-        LinkedList<ProductMovement> beingMovements = new LinkedList<ProductMovement>();
+        List<ProductMovement> beingMovements = new LinkedList<ProductMovement>();
         pendingMovements.drainTo(beingMovements);
 
-        //insert all being movement to movement table
-        //verify any movement not duplicate in record. if duplicate check any change on the movement, update once.
-        // if any update is about quantity or used uom change. figure down different then adding to being movement,
-        // also remove previous movement has been checked got updated.
+        List<ProductMovement> ensureStockingMovements = new LinkedList<ProductMovement>();
+        HashMap<String, Double> ensureStockingMap = new HashMap<String, Double>();
 
-        HashMap<String, Integer> sizeOfOrder = new HashMap<String, Integer>();
-        Set<String> sizeOfOrderKeySet = sizeOfOrder.keySet();
+        //if any order's id exist in record. jump to identifyOrder
         Iterator<ProductMovement> iterator = beingMovements.iterator();
-
-        HashMap<String, List<ProductMovement>> orderMap = new HashMap<String, List<ProductMovement>>();
-
+        List<StockMoveOut> moveOuts = new LinkedList<StockMoveOut>();
+        List<StockMoveIn> moveIns = new LinkedList<StockMoveIn>();
         while(iterator.hasNext()){
             ProductMovement next = iterator.next();
             if(next instanceof StockMoveOut){
                 StockMoveOut moveOut = (StockMoveOut) next;
-                if(!sizeOfOrderKeySet.contains(moveOut.getOrderId())){
-                    sizeOfOrder.put(moveOut.getOrderId(), 1);
-
-                    LinkedList<ProductMovement> linkedList = new LinkedList<ProductMovement>();
-                    linkedList.add(moveOut);
-                    orderMap.put(moveOut.getOrderId(), linkedList);
-                } else {
-                    int i = sizeOfOrder.get(moveOut.getOrderId()) + 1;
-                    sizeOfOrder.put(moveOut.getOrderId(), i);
-
-                    orderMap.get(moveOut.getOrderId()).add(moveOut);
-                }
+                moveOuts.add(moveOut);
             }
             if(next instanceof StockMoveIn){
-                // TODO: component of stock in implement later
+                StockMoveIn moveIn = (StockMoveIn) next;
+                moveIns.add(moveIn);
             }
         }
 
-        List<String> asList = Arrays.asList((String[]) sizeOfOrderKeySet.toArray());
-        Map<String, Integer> orderSizeReturnMap = pMovementMapper.bulkGetRecordSizeOfOrderByOrderId(asList);
-        Iterator<String> sizeIterator = sizeOfOrderKeySet.iterator();
-        while(sizeIterator.hasNext()){
-            String next = sizeIterator.next();
-            if(sizeOfOrder.get(next).intValue() != (orderSizeReturnMap.get(next)).intValue()){
-                // try to insert a new movement into record
-                List<ProductMovement> movements = orderMap.get(next);
-            }
-        }
-
-        pMovementMapper.bulkGetMoveOutByOrderIdsAndProductIds(beingMovements);
-
-
-        // replace all movement's used measurement to origin measurement that product meta matched.
-        // continue update the product meta matched stocking table.
-
-        HashMap<String, Map<String, ProductMeasurement>> originMeasurement = this.pullOriginMeasurement(beingMovements);
-
-        ProductMovement polledMoves = beingMovements.poll();
-        // getting hashMap by sales channel continue getting by product measurement relative id.
-        ProductMeasurement measurement = originMeasurement.get(polledMoves.getSalesChannel())
-            .get(polledMoves.getProductId() + "-" + polledMoves.getUsedUOM());
-        polledMoves.setQuantity(polledMoves.getQuantity() * measurement.getMeasurement());
+        HashMap<String, Object> resultMap = this.stockMoveOutUpdateToRepository(beingMovements, moveOuts);
+        this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
+        ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
+        
+        resultMap = this.stockMoveInUpdateToRepository(beingMovements, moveIns);
+        this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
+        ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
 
         return true;
+    }
+
+    private void putWithAdding(Map<String, Double> toPutMap, HashMap<String, Double> ensureStockingMap) {
+        Iterator<String> iterator = toPutMap.keySet().iterator();
+        while(iterator.hasNext()){
+            String next = iterator.next();
+            if(ensureStockingMap.containsKey(next)){
+                Double double1 = ensureStockingMap.get(next);
+                double1 += toPutMap.get(next);
+                ensureStockingMap.put(next, double1);
+            } else {
+                ensureStockingMap.put(next, toPutMap.get(next));
+            }
+        }
+    }
+
+    /**
+     * this method use to find up a beingMovements's move has not contained in orderIdSet from the repository.
+     * 
+     * @param OrderIdSet a set of order'ids has exists in repository being insert for.
+     * @param beingMovements a list of source movements being insert to repository.
+     * @return a list of ProductMovement not contained in OrderIdSet.
+     */
+    private List<ProductMovement> fetchNotExistsRecordForOrderId(List<String> OrderIdSet, LinkedList<ProductMovement> beingMovements) {
+
+        LinkedList<ProductMovement> notExistRecordMovements = new LinkedList<ProductMovement>();
+        HashSet<String> notExistOrderIds = new HashSet<String>();
+
+        for(ProductMovement moves: beingMovements){
+            if(moves instanceof StockMoveOut){
+                StockMoveOut moveOut = (StockMoveOut) moves;
+
+                if(notExistOrderIds.contains(moveOut.getOrderId()) || !OrderIdSet.contains(moveOut.getOrderId()) ){
+                    notExistRecordMovements.add(moveOut);
+                    notExistOrderIds.add(moveOut.getOrderId());
+                }
+            }
+        }
+        return notExistRecordMovements;
+    }
+
+    private HashMap<String, Object> stockMoveOutUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveOut> beingMoveOuts){
+        List<String> uniqueOrderIds = new LinkedList<String>();
+        List<StockMoveOut> ensureStockingMoveOuts = new LinkedList<>();
+        Map<String, Double> ensureStockingMap = new HashMap<String, Double>(); // key by product relative id.
+
+        Iterator<StockMoveOut> iterator = beingMoveOuts.iterator();
+        while(iterator.hasNext()){
+            StockMoveOut next = iterator.next();
+            if(!uniqueOrderIds.contains(next.getOrderId())) uniqueOrderIds.add(next.getOrderId());
+        }
+
+        // put all new order identify by order's id from repository to ensureStockingMovements, then remove from beingMovement. 
+        
+        
+        LinkedList<StockMoveOut> repositoryMoveOuts = new LinkedList<StockMoveOut>(); // get repository's order from mapper.
+
+
+        // sorting StockMoveOut first priority by orderId, then second priority is product's relative id (productId + UOM).
+        Comparator<StockMoveOut> comparator = new Comparator<StockMoveOut>() {
+
+            @Override
+            public int compare(StockMoveOut o1, StockMoveOut o2) {
+                // TODO Auto-generated method stub
+                throw new UnsupportedOperationException("Unimplemented method 'compare'");
+            }
+        };
+        beingMoveOuts.sort(comparator);
+        repositoryMoveOuts.sort(comparator);
+        
+        
+        // use multi-multi iterator, iterate beingMoveOut and repositoryMoveOuts
+        // if find the matched StockMoveOut is not any changed. remove from both beingMovements, beingMoveOuts, repositoryMoveOuts
+        // if got update, update to repository's productMovement by bulkUpdate, and figure down quantity put to EnsureStockingList.
+        //      remove from beingMovement, also repositoryMoveOuts.
+        
+        // since any duplicate movements and updated movememnts is remove from both beingMoveOuts and repositoryMoveOuts.
+        // iterate beingMoveOuts a new movement by orders. insert to repository movement and put it to ensureStockingMovements, remove
+        //      from beingMoveOuts
+        // iterate repositoryMoveOuts remains to be delete movements. figure down quantity return to Stocking, putting return quantity
+        //      ensureStockingList, remove from repositoryMoveOuts.
+
+        // finally step, return both ensureStockingMovements and ensureStockingList.=
+        HashMap<String, Object> resultMap = new HashMap<String, Object>();
+        resultMap.put(ENSURE_STOCKING_MAP, ensureStockingMap);
+        resultMap.put(ENSURE_STOCKING_MOVEMENTS, ensureStockingMoveOuts);
+        return resultMap;
+    }
+
+    private HashMap<String, Object> stockMoveInUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveIn> moveIns){
+        return null;
     }
 
     /**
