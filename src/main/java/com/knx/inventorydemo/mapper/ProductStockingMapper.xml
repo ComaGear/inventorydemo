@@ -2,13 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.knx.inventorydemo.mapper.ProductStockingMapper">
-    <insert id="measInit">
+    <insert id="init">
         create table inventorydemo.product_stocking (
             product_id varchar(20),
-            min_quantity double,
-            quantity_available double,
-            quantity_on_hold double,
-            restock_frequence_interval float
+            stocking_available double,
+            stocking_on_hold double,
+            stocking double,
+            last_stocking double
         );
     </insert>
 </mapper>

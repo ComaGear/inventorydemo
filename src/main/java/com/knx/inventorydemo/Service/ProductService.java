@@ -1,6 +1,5 @@
 package com.knx.inventorydemo.Service;
 
-import java.util.HashMap;
 import java.util.List;
 
 import com.knx.inventorydemo.entity.ProductMeasurement;

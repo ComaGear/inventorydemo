@@ -137,8 +137,25 @@ public class StockingService{
 
             @Override
             public int compare(StockMoveOut o1, StockMoveOut o2) {
-                // TODO Auto-generated method stub
-                throw new UnsupportedOperationException("Unimplemented method 'compare'");
+                if(o2 == null || o2.getOrderId().isEmpty()) return -1;
+                if(o1 == null || o1.getOrderId().isEmpty()) return 1;
+
+                if(o1.getOrderId().compareTo(o2.getOrderId()) == 0){
+
+                    String o1RelativeId = null;
+                    if(o1.getRelativeId() == null || o1.getRelativeId().isEmpty()) // || !o1.getRelativeId().contains("-")
+                        o1RelativeId = o1.getProductId() + "-" + o1.getUsedUOM();
+                    else o1RelativeId = o1.getRelativeId();
+
+                    String o2RelativeId = null;
+                    if(o2.getRelativeId() == null || o2.getRelativeId().isEmpty()) // || !o2.getRelativeId().contains("-")
+                        o2RelativeId = o2.getProductId() + "-" + o1.getUsedUOM();
+                    else o2RelativeId = o2.getRelativeId();
+
+                    return o1RelativeId.compareTo(o2RelativeId);
+                }
+
+                return o1.getOrderId().compareTo(o2.getOrderId());
             }
         };
         beingMoveOuts.sort(comparator);
