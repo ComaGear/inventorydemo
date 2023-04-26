@@ -44,9 +44,9 @@
     </select>
 
     <select id="getProductMeasByRelativeIdWithChannel" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{channel} as channel, barcode
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id,  <if test="#{channel} != null">#{channel} as channel,</if> barcode
         from product_measurement
-        where relative_id = #{relativeId} and #{channel}
+        where relative_id = #{relativeId} <if test="#{channel} != null">and channel = #{channel}</if>
     </select>
 
     <select id="bulkGetProductMeasByRelativeIdwithChannel" resultMap="ProductMeas">

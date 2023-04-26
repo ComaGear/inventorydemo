@@ -67,6 +67,15 @@ public class MeasurementService  {
         return measMap;
     }
 
+    public Map<String, ProductMeasurement> getProductMeasByRelativeIds(List<String> relativeIds){
+        List<ProductMeasurement> list = productMeasurementMapper.bulkGetProductMeasByRelativeIdwithChannel(null, relativeIds);
+        Map<String, ProductMeasurement> measMap = new HashMap<String, ProductMeasurement>();
+        for(ProductMeasurement meas : list){
+            measMap.put(meas.getRelativeId(), meas);
+        }
+        return measMap;
+    }
+
 
     /**
      * add a new product's measurment to specify layer of sales channel.
