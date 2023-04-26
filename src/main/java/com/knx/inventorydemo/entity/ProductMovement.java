@@ -33,6 +33,7 @@ public class ProductMovement {
     }
 
     public String getRelativeId() {
+        if(relativeId == null) return productId + "-" + usedUOM;
         return relativeId;
     }
 

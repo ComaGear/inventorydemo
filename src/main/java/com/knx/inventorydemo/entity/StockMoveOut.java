@@ -20,4 +20,17 @@ public class StockMoveOut extends ProductMovement {
         this.salesChannel = salesChannel;
         return this;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof StockMoveOut){
+            StockMoveOut oMoveOut = (StockMoveOut) obj;
+            return this.getOrderId().equals(oMoveOut.getOrderId())
+                && this.getRelativeId().equals(oMoveOut.getRelativeId())
+                && this.getSalesChannel().equals(oMoveOut.getSalesChannel());
+        }
+        return super.equals(obj);
+    }
+
+    
 }

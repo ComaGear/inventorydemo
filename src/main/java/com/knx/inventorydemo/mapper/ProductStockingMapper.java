@@ -9,10 +9,12 @@ import com.knx.inventorydemo.entity.Stocking;
 
 public interface ProductStockingMapper {
 
+    // this a opinion is query stock_avaible by stocking minus stocking_on_hold. not store as one column in table.
     public Map<String, Double> bulkGetStockAvailableByProductId(List<String> productIds);
 
     public int updateStockingOnHold(List<Stocking> stockings);
 
+    // not implement yet
     public int updateStockingFromHoldToStock(List<String> productIds);
 
     public void init();

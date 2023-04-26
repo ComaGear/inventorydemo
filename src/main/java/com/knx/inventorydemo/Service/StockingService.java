@@ -74,18 +74,49 @@ public class StockingService{
         this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
         ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
 
-
-        List<Stocking> toStockingMap = new LinkedList<Stocking>(); // key by product's id.
+        // ensureStockingMovments turn stocking state and tehen put it to ensureStockingMap
+        for(ProductMovement ensureMovement : ensureStockingMovements){
+            if(ensureStockingMap.containsKey(ensureMovement.getRelativeId())){
+                Double stockDouble = ensureStockingMap.get(ensureMovement.getRelativeId());
+                stockDouble += ensureMovement.getQuantity();
+                ensureStockingMap.put(ensureMovement.getRelativeId(), stockDouble);
+            } else {
+                ensureStockingMap.put(ensureMovement.getRelativeId(), ensureMovement.getQuantity());
+            }
+        }
 
         // turn ensureStockingMap to product's measurement to origin matched to product meta.
         // ensureStockingMap is key by product measurement relative id. use pullOriginMeasurement() to turn it off.
-        // ensureStockingMovments may not a product origin measurement, shall turn it to origin and figure down quantity
-        //    put it to ensureStockingMap
+        Set<String> keySet = ensureStockingMap.keySet();
+        List<String> relativeIds = new LinkedList<String>();
+        for(String key : keySet) relativeIds.add(key);
+        Map<String, ProductMeasurement> measByRelativeIds = this.pullOriginMeasurementByRelativeIds(relativeIds);
+        
+        Iterator<String> keyIterator = ensureStockingMap.keySet().iterator();
+        Map<String, Stocking> stockingsMap = new HashMap<String, Stocking>();
+        while(keyIterator.hasNext()){
+            String key = keyIterator.next();
+            double ensureStockingDouble = ensureStockingMap.get(key) * measByRelativeIds.get(key).getMeasurement();
+            
+            String productId = measByRelativeIds.get(key).getProductId();
+            if(stockingsMap.containsKey(productId))
+                stockingsMap.get(productId).addQuantity(ensureStockingDouble);
+            else
+                stockingsMap.put(productId, new Stocking(productId, ensureStockingDouble));
+        }
+
+        //turn stockings from map to list.
+        List<Stocking> stockings = new LinkedList<Stocking>();
+        Iterator<String> stockingsMapIterator = stockingsMap.keySet().iterator();
+        while(stockingsMapIterator.hasNext()) {
+            Stocking stocking = stockingsMap.get(stockingsMapIterator.next());
+            stockings.add(stocking);
+        }
 
         // finally step is udpate stocking to repository 
-        pStockingMapper.updateStockingOnHold(toStockingMap);
+        int updates = pStockingMapper.updateStockingOnHold(stockings);
 
-        return true;
+        return updates > 0;
     }
 
     private void putWithAdding(Map<String, Double> toPutMap, HashMap<String, Double> ensureStockingMap) {
@@ -139,10 +170,23 @@ public class StockingService{
         }
 
         // put all new order identify by order's id from repository to ensureStockingMovements, then remove from beingMovement. 
-        
-        
-        LinkedList<StockMoveOut> repositoryMoveOuts = new LinkedList<StockMoveOut>(); // get repository's order from mapper.
+        for(StockMoveOut moveOut : beingMoveOuts){
+            if(!uniqueOrderIds.contains(moveOut.getOrderId())) uniqueOrderIds.add(moveOut.getOrderId());
+        }
 
+        List<String> existsOrderIds = pMovementMapper.getExistsOrderIds(uniqueOrderIds);
+        for(StockMoveOut moveOut : beingMoveOuts){
+            if(!existsOrderIds.contains(moveOut.getOrderId())){
+                logger.debug(String.format("repository has not contains this moveOut's orderId by %s, relativeId is %s" ,
+                     moveOut.getOrderId(), moveOut.getRelativeId()));
+                ensureStockingMoveOuts.add(moveOut);
+                beingMovements.remove(moveOut);
+                beingMoveOuts.remove(moveOut);
+            }
+        }
+
+        
+        List<StockMoveOut> repositoryMoveOuts = new LinkedList<StockMoveOut>(); // get repository's order from mapper.
 
         // sorting StockMoveOut first priority by orderId, then second priority is product's relative id (productId + UOM).
         Comparator<StockMoveOut> comparator = new Comparator<StockMoveOut>() {
@@ -399,6 +443,11 @@ public class StockingService{
         }
 
         return resultMovementMap;
+    }
+
+    public Map<String, ProductMeasurement> pullOriginMeasurementByRelativeIds(List<String> relativeIds){
+        Map<String, ProductMeasurement> productMeasByRelativeIds = measurementService.getProductMeasByRelativeIds(relativeIds);
+        return productMeasByRelativeIds;
     }
 
     public StockingService(){

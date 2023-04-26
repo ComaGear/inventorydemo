@@ -20,6 +20,10 @@ public class Stocking{
         this.quantity = quantity;
     }
 
+    public void addQuantity(double oQuanity){
+        this.quantity += oQuanity;
+    }
+
     public Stocking(String productId, double quantity) {
         this.productId = productId;
         this.quantity = quantity;
