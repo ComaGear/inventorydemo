@@ -2,6 +2,44 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.knx.inventorydemo.mapper.ProductStockingMapper">
+
+    <resultMap id="ProductStocking" type="com.knx.inventorydemo.entity.ProductStocking">
+        <id property="productId" column="product_id"/>
+        <result column="stocking_available" property="stockAvailable"/>
+        <result column="stocking_on_hold" property="stockOnHold"/>
+        <result column="stocking" property="stock"/>
+    </resultMap>
+
+    <select id="bulkGetStockingByProductIds" resultMap="ProductStocking">
+        select * from product_stocking where product_id in
+        <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+    </select>
+
+    <insert id="createStockingByProductIds">
+        insert into product_stocking (product_id, stocking_available, stocking_on_hold, stocking) values
+        <foreach collection="productIds" index="index" item="productId" open="" separator="," close="">
+            (#{productId}, 0.0, 0.0, 0.0)
+        </foreach>
+    </insert>
+
+    <update id="updateStockingOnHold" parameterType="com.knx.inventorydemo.entity.Stocking">
+        <foreach collection="stockings" item="stocking" index="index">
+        update product_stocking as o
+        inner join (select product_id, stocking_on_hold from product_stocking where product_id = #{stocking.productId}) as a
+            on o.product_id = A.product_id
+        set o.stocking_on_hold = a.stocking_on_hold + #{stocking.quantity};
+        </foreach>
+    </update>
+
+    <delete id="deleteByProductIds">
+        delete from product_stocking where product_id in
+        <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
+             #{productId}
+        </foreach>
+    </delete>
+
     <insert id="init">
         create table inventorydemo.product_stocking (
             product_id varchar(20),

@@ -6,9 +6,17 @@ package com.knx.inventorydemo.entity;
 public class ProductStocking {
 
     private String productId;
-    private double min_quantity;
     private double stockAvailable;
     private double stockOnHold;
+    private double stock;
+
+    public double getStock() {
+        return stock;
+    }
+
+    public void setStock(double stock) {
+        this.stock = stock;
+    }
 
     public String getProductId() {
         return productId;
@@ -24,14 +32,6 @@ public class ProductStocking {
 
     public void setStockOnHold(double stockOnHold) {
         this.stockOnHold = stockOnHold;
-    }
-
-    public double getMin_quantity() {
-        return min_quantity;
-    }
-
-    public void setMin_quantity(double min_quantity) {
-        this.min_quantity = min_quantity;
     }
 
     public double getStockAvailable() {

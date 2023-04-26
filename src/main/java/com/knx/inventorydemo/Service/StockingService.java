@@ -22,6 +22,7 @@ import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;
+import com.knx.inventorydemo.entity.Stocking;
 import com.knx.inventorydemo.exception.ProductUnactivityException;
 import com.knx.inventorydemo.mapper.ProductMovementMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
@@ -72,6 +73,17 @@ public class StockingService{
         resultMap = this.stockMoveInUpdateToRepository(beingMovements, moveIns);
         this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
         ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
+
+
+        List<Stocking> toStockingMap = new LinkedList<Stocking>(); // key by product's id.
+
+        // turn ensureStockingMap to product's measurement to origin matched to product meta.
+        // ensureStockingMap is key by product measurement relative id. use pullOriginMeasurement() to turn it off.
+        // ensureStockingMovments may not a product origin measurement, shall turn it to origin and figure down quantity
+        //    put it to ensureStockingMap
+
+        // finally step is udpate stocking to repository 
+        pStockingMapper.updateStockingOnHold(toStockingMap);
 
         return true;
     }
@@ -181,6 +193,7 @@ public class StockingService{
     }
 
     private HashMap<String, Object> stockMoveInUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveIn> moveIns){
+        // similarly to stockMoveOutUpdateToRepository. but use MoveIn as parameter.
         return null;
     }
 
