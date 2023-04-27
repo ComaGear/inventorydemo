@@ -37,13 +37,13 @@
         insert into product_movement 
             (relative_id, product_id, update_date, quantity, used_uom, channel)
         values
-        <foreach collection="moveOuts" item="moveOut" index="index" open="(" separator="),(" close=")">
-            #{moveOut.relativeId}, #{moveOut.productId}, #{moveOut.date}, #{moveOut.quantity}, #{moveOut.usedUOM}, #{moveOut.salesChannel}
+        <foreach collection="moveOuts" item="moveOut" index="index" open="" separator="," close="">
+            (#{moveOut.relativeId}, #{moveOut.productId}, #{moveOut.date}, #{moveOut.quantity}, #{moveOut.usedUOM}, #{moveOut.salesChannel})
         </foreach>
     </insert>
 
     <update id="bulkUpdateMoveIn" parameterType="java.util.List">
-        <foreach collection="moveIns" item="moveIn" index="index" open=" " separator=";" close=";">
+        <foreach collection="moveIns" item="moveIn" index="index" open=" " separator="" close="">
             update product_movement
                 <trim prefix="set" suffixOverrides=",">
                     <!-- <if test="moveIn.relativeId != null">relative_id = #{moveIn.relativeId}</if> -->
@@ -53,12 +53,12 @@
                     <if test="moveIn.date != null">update_date = #{moveIn.date}</if>
                     <if test="moveIn.vendorName != null">vendor = #{moveIn.vendorName}</if>
                 </trim>
-            where relative_id = #{relativeId} and product_id = #{productId}
+            where relative_id = #{moveOut.relativeId} and channel = ${moveOut.salesChannel};
         </foreach>
     </update>
 
     <update id="bulkUpdateMoveOut" parameterType="java.util.List">
-        <foreach collection="moveOuts" item="moveOut" index="index" open=" " separator=";" close=";">
+        <foreach collection="moveOuts" item="moveOut" index="index" open=" " separator="" close="">
             update product_movement
                 <trim prefix="set" suffixOverrides=",">
                     <!-- <if test="moveOut.relativeId != null">relative_id = #{moveOut.relativeId}</if> -->
@@ -66,9 +66,9 @@
                     <if test="moveOut.quantity != null">quantity = #{moveOut.quantity}</if>
                     <if test="moveOut.usedUOM != null">used_uom = #{moveOut.usedUOM}</if>
                     <if test="moveOut.date != null">update_date = #{moveOut.date}</if>
-                    <if test="moveOut.vendorName != null">vendor = #{moveOut.vendorName}</if>
+                    <!-- <if test="moveOut.vendorName != null">vendor = #{moveOut.vendorName}</if> -->
                 </trim>
-            where relative_id = #{relativeId} and product_id = #{productId}
+            where relative_id = #{moveOut.relativeId} and channel = ${moveOut.salesChannel};
         </foreach>
     </update>
 

@@ -15,9 +15,9 @@ public interface ProductMovementMapper {
 
     public int bulkInsertMoveOut(List<StockMoveOut> moveOuts);
     
-    public int bulkUpdateMoveIn(List<StockMoveIn> moveIns, String relativeId, String productId);
+    public int bulkUpdateMoveIn(List<StockMoveIn> moveIns);
 
-    public int bulkUpdateMoveOut(List<StockMoveIn> moveOuts, String relativeId, String productId);
+    public int bulkUpdateMoveOut(List<StockMoveOut> moveOuts);
 
     public Set<ProductMovement> bulkGetMoveIn(List<String> relativeIds);
 

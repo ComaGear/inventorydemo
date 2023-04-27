@@ -1,5 +1,6 @@
 package com.knx.inventorydemo.Service;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,6 +68,7 @@ public class StockingService{
         }
 
         HashMap<String, Object> resultMap = this.stockMoveOutUpdateToRepository(beingMovements, moveOuts);
+        // TODO turn returned stockingMap and movements to negative Stocking.
         this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
         ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
         
@@ -205,7 +207,7 @@ public class StockingService{
 
                     String o2RelativeId = null;
                     if(o2.getRelativeId() == null || o2.getRelativeId().isEmpty()) // || !o2.getRelativeId().contains("-")
-                        o2RelativeId = o2.getProductId() + "-" + o1.getUsedUOM();
+                        o2RelativeId = o2.getProductId() + "-" + o2.getUsedUOM();
                     else o2RelativeId = o2.getRelativeId();
 
                     return o1RelativeId.compareTo(o2RelativeId);
@@ -217,17 +219,89 @@ public class StockingService{
         beingMoveOuts.sort(comparator);
         repositoryMoveOuts.sort(comparator);
         
-        
         // use multi-multi iterator, iterate beingMoveOut and repositoryMoveOuts
         // if find the matched StockMoveOut is not any changed. remove from both beingMovements, beingMoveOuts, repositoryMoveOuts
         // if got update, update to repository's productMovement by bulkUpdate, and figure down quantity put to EnsureStockingList.
         //      remove from beingMovement, also repositoryMoveOuts.
+        Iterator<StockMoveOut> repositoryIterator = repositoryMoveOuts.iterator();
+        Iterator<StockMoveOut> beingIterator = beingMoveOuts.iterator();
+        StockMoveOut rMoveOut = null;
+        StockMoveOut beingMoveOut = null;
+        boolean first = false;
+        if(repositoryIterator.hasNext()){
+            rMoveOut = repositoryIterator.next();
+            beingMoveOut = beingIterator.next();
+            first = true;
+        }
+
+        // a list to be udpate repository's record of find has record before.
+        List<StockMoveOut> toUpdateMoveOuts = new LinkedList<StockMoveOut>();
+
+        while(repositoryIterator.hasNext() || first){
+            if(beingMoveOut == null || rMoveOut == null) return null;
+            first = false;
+            int compare =  beingMoveOut.compareTo(rMoveOut);
+            
+            switch(compare){
+                case -1: // smallest than
+                    beingMoveOut = beingIterator.next();
+                    break;
+                case 1:
+                    rMoveOut = repositoryIterator.next();
+                    break;
+                case 0:
+                    double beingQuantity = beingMoveOut.getQuantity();
+                    double rQuantity = rMoveOut.getQuantity();
+                    double stocking = beingQuantity - rQuantity;
+                    String format = new DecimalFormat("#########.####").format(stocking);
+                    if(Double.valueOf(format) != 0.0000d){
+                        if(!ensureStockingMap.containsKey(beingMoveOut.getRelativeId()))
+                            ensureStockingMap.put(beingMoveOut.getRelativeId(), stocking);
+                        else {
+                            double double1 = ensureStockingMap.get(beingMoveOut.getRelativeId());
+                            double d = double1 + stocking;
+                            ensureStockingMap.put(beingMoveOut.getRelativeId(), d);
+                        }
+                        toUpdateMoveOuts.add(beingMoveOut);
+                    }
+
+                    beingMoveOuts.remove(beingMoveOut);
+                    beingMovements.remove(beingMoveOut);
+                    repositoryMoveOuts.remove(rMoveOut);
+                    beingMoveOut = beingIterator.next();
+                    rMoveOut = repositoryIterator.next();
+
+                    break;
+            }
+        }
+        pMovementMapper.bulkUpdateMoveOut(toUpdateMoveOuts);
         
         // since any duplicate movements and updated movememnts is remove from both beingMoveOuts and repositoryMoveOuts.
         // iterate beingMoveOuts a new movement by orders. insert to repository movement and put it to ensureStockingMovements, remove
         //      from beingMoveOuts
+        List<StockMoveOut> newMoveOuts = new LinkedList<StockMoveOut>();
+        for(StockMoveOut moveOut: beingMoveOuts){
+            ensureStockingMoveOuts.add(moveOut);
+            beingMovements.remove(moveOut);
+            beingMoveOuts.remove(moveOut);
+            newMoveOuts.add(moveOut);
+        }
+        pMovementMapper.bulkInsertMoveOut(newMoveOuts);
+
         // iterate repositoryMoveOuts remains to be delete movements. figure down quantity return to Stocking, putting return quantity
         //      ensureStockingList, remove from repositoryMoveOuts.
+        List<StockMoveOut> toDeleteMoveOuts = new LinkedList<StockMoveOut>();
+        for(StockMoveOut moveOut : repositoryMoveOuts){
+            if(ensureStockingMap.containsKey(moveOut.getRelativeId())){
+                Double double1 = ensureStockingMap.get(moveOut.getRelativeId());
+                double1 -= moveOut.getQuantity();
+                ensureStockingMap.put(moveOut.getRelativeId(), double1);
+            } else
+                ensureStockingMap.put(moveOut.getRelativeId(), -moveOut.getQuantity());
+            
+            repositoryMoveOuts.remove(moveOut);
+            toDeleteMoveOuts.add(moveOut);
+        }
 
         // finally step, return both ensureStockingMovements and ensureStockingList.=
         HashMap<String, Object> resultMap = new HashMap<String, Object>();
@@ -367,18 +441,14 @@ public class StockingService{
 
             if(movementList.get(movementIndex).getRelativeId() == relativeIds.get(relativeIdsIndex)){
                 linkedList.add(movementList.get(movementIndex));
-
                 lastFoundIndex = movementIndex;
 
                 if((relativeIdsIndex + 1) != relativeIds.size()) {
-                    if(relativeIds.get(relativeIdsIndex + 1) != relativeIds.get(relativeIdsIndex)){
+                    if(relativeIds.get(relativeIdsIndex + 1) != relativeIds.get(relativeIdsIndex))
                         movementIndex++;
-                    } else {
+                    else 
                         continue;
-                    }
-                } else {
-                    movementIndex++;
-                }
+                } else movementIndex++;
             }
 
             for( ; movementIndex < movementList.size(); movementIndex++){
@@ -395,11 +465,7 @@ public class StockingService{
                     break;
                 }
             }
-
-            if(movementIndex >= movementList.size()) {
-                movementIndex = lastFoundIndex;
-            }
-            
+            if(movementIndex >= movementList.size()) movementIndex = lastFoundIndex;
         }
 
         return linkedList;

@@ -2,11 +2,8 @@ package com.knx.inventorydemo;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

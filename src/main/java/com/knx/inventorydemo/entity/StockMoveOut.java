@@ -1,6 +1,6 @@
 package com.knx.inventorydemo.entity;
 
-public class StockMoveOut extends ProductMovement {
+public class StockMoveOut extends ProductMovement implements Comparable {
     private String salesChannel;
     private String OrderId;
 
@@ -32,5 +32,35 @@ public class StockMoveOut extends ProductMovement {
         return super.equals(obj);
     }
 
-    
+    @Override
+    public int compareTo(Object obj) {
+        if(obj instanceof StockMoveOut){
+            StockMoveOut oMoveOut = (StockMoveOut) obj;
+            if(this.getOrderId().equals(oMoveOut.getOrderId())
+                && this.getRelativeId().equals(oMoveOut.getRelativeId())
+                == true) return 0; 
+
+            if(oMoveOut == null || oMoveOut.getOrderId().isEmpty()) return -1;
+            if(this == null || this.getOrderId().isEmpty()) return 1;
+
+            if(this.getOrderId().compareTo(oMoveOut.getOrderId()) == 0){
+
+                String o1RelativeId = null;
+                if(this.getRelativeId() == null || this.getRelativeId().isEmpty()) // || !this.getRelativeId().contains("-")
+                    o1RelativeId = this.getProductId() + "-" + this.getUsedUOM();
+                else o1RelativeId = this.getRelativeId();
+
+                String o2RelativeId = null;
+                if(oMoveOut.getRelativeId() == null || oMoveOut.getRelativeId().isEmpty()) // || !oMoveOut.getRelativeId().contains("-")
+                    o2RelativeId = oMoveOut.getProductId() + "-" + oMoveOut.getUsedUOM();
+                else o2RelativeId = oMoveOut.getRelativeId();
+
+                return o1RelativeId.compareTo(o2RelativeId);
+            }
+
+            return this.getOrderId().compareTo(oMoveOut.getOrderId());
+        }
+
+        return -1;
+    }
 }
