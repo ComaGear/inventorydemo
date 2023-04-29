@@ -68,9 +68,16 @@ public class StockingService{
         }
 
         HashMap<String, Object> resultMap = this.stockMoveOutUpdateToRepository(beingMovements, moveOuts);
-        // TODO turn returned stockingMap and movements to negative Stocking.
         this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
-        ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
+        List<ProductMovement> movesList = (List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS);
+        // ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
+        for(ProductMovement moves : movesList) {
+            if(moves instanceof StockMoveOut){
+                StockMoveOut moveOut = (StockMoveOut) moves;
+                moveOut.prepareStocking();
+            }
+        }
+        ensureStockingMovements.addAll(movesList);
         
         resultMap = this.stockMoveInUpdateToRepository(beingMovements, moveIns);
         this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
@@ -165,12 +172,6 @@ public class StockingService{
         List<StockMoveOut> ensureStockingMoveOuts = new LinkedList<>();
         Map<String, Double> ensureStockingMap = new HashMap<String, Double>(); // key by product relative id.
 
-        Iterator<StockMoveOut> iterator = beingMoveOuts.iterator();
-        while(iterator.hasNext()){
-            StockMoveOut next = iterator.next();
-            if(!uniqueOrderIds.contains(next.getOrderId())) uniqueOrderIds.add(next.getOrderId());
-        }
-
         // put all new order identify by order's id from repository to ensureStockingMovements, then remove from beingMovement. 
         for(StockMoveOut moveOut : beingMoveOuts){
             if(!uniqueOrderIds.contains(moveOut.getOrderId())) uniqueOrderIds.add(moveOut.getOrderId());
@@ -252,7 +253,7 @@ public class StockingService{
                 case 0:
                     double beingQuantity = beingMoveOut.getQuantity();
                     double rQuantity = rMoveOut.getQuantity();
-                    double stocking = beingQuantity - rQuantity;
+                    double stocking = rQuantity - beingQuantity;
                     String format = new DecimalFormat("#########.####").format(stocking);
                     if(Double.valueOf(format) != 0.0000d){
                         if(!ensureStockingMap.containsKey(beingMoveOut.getRelativeId()))
@@ -294,10 +295,10 @@ public class StockingService{
         for(StockMoveOut moveOut : repositoryMoveOuts){
             if(ensureStockingMap.containsKey(moveOut.getRelativeId())){
                 Double double1 = ensureStockingMap.get(moveOut.getRelativeId());
-                double1 -= moveOut.getQuantity();
+                double1 += moveOut.getQuantity();
                 ensureStockingMap.put(moveOut.getRelativeId(), double1);
             } else
-                ensureStockingMap.put(moveOut.getRelativeId(), -moveOut.getQuantity());
+                ensureStockingMap.put(moveOut.getRelativeId(), moveOut.getQuantity());
             
             repositoryMoveOuts.remove(moveOut);
             toDeleteMoveOuts.add(moveOut);
@@ -310,8 +311,59 @@ public class StockingService{
         return resultMap;
     }
 
-    private HashMap<String, Object> stockMoveInUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveIn> moveIns){
+    private HashMap<String, Object> stockMoveInUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveIn> beingMoveIns){
         // similarly to stockMoveOutUpdateToRepository. but use MoveIn as parameter.
+        List<String> uniqueDocsIds = new LinkedList<String>();
+        List<StockMoveIn> ensureStockingMoveIns = new LinkedList<>();
+        Map<String, Double> ensureStockingMap = new HashMap<String, Double>(); // key by product relative id.
+
+        for(StockMoveIn moveIn : beingMoveIns){
+            if(!uniqueDocsIds.contains(moveIn.getDocsId())) uniqueDocsIds.add(moveIn.getDocsId());
+        }
+
+        List<String> existsOrderIds = pMovementMapper.getExistsDocsIds(uniqueDocsIds);
+        for(StockMoveIn moveIn : beingMoveIns){
+            if(!existsOrderIds.contains(moveIn.getDocsId())){
+                logger.debug(String.format("repository has not contains this moveIn's docsId by %s, relativeId is %s" ,
+                     moveIn.getDocsId(), moveIn.getRelativeId()));
+                     ensureStockingMoveIns.add(moveIn);
+                beingMovements.remove(moveIn);
+                beingMoveIns.remove(moveIn);
+            }
+        }
+
+        List<StockMoveIn> repositoryMoveIns = new LinkedList<StockMoveIn>(); // get repository's order from mapper.
+
+        // sorting StockMoveOut first priority by orderId, then second priority is product's relative id (productId + UOM).
+        Comparator<StockMoveIn> comparator = new Comparator<StockMoveIn>() {
+
+            @Override
+            public int compare(StockMoveIn o1, StockMoveIn o2) {
+                if(o2 == null || o2.getOrderId().isEmpty()) return -1;
+                if(o1 == null || o1.getOrderId().isEmpty()) return 1;
+
+                if(o1.getOrderId().compareTo(o2.getOrderId()) == 0){
+
+                    String o1RelativeId = null;
+                    if(o1.getRelativeId() == null || o1.getRelativeId().isEmpty()) // || !o1.getRelativeId().contains("-")
+                        o1RelativeId = o1.getProductId() + "-" + o1.getUsedUOM();
+                    else o1RelativeId = o1.getRelativeId();
+
+                    String o2RelativeId = null;
+                    if(o2.getRelativeId() == null || o2.getRelativeId().isEmpty()) // || !o2.getRelativeId().contains("-")
+                        o2RelativeId = o2.getProductId() + "-" + o2.getUsedUOM();
+                    else o2RelativeId = o2.getRelativeId();
+
+                    return o1RelativeId.compareTo(o2RelativeId);
+                }
+
+                return o1.getOrderId().compareTo(o2.getOrderId());
+            }
+        };
+        beingMoveOuts.sort(comparator);
+        repositoryMoveIns.sort(comparator);
+
+
         return null;
     }
 
@@ -322,7 +374,6 @@ public class StockingService{
      */
     private boolean pushMovement(ProductMovement movement, boolean skipCheck){
 
-        // TODO checking movement's product id activity.
         LinkedList<String> linkedList = new LinkedList<String>();
         linkedList.add(movement.getProductId());
         List<String> unactivityList = null;

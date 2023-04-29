@@ -3,7 +3,6 @@ package com.knx.inventorydemo.mapper;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import com.knx.inventorydemo.entity.ProductStocking;
 import com.knx.inventorydemo.entity.Stocking;
 

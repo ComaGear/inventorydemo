@@ -63,4 +63,9 @@ public class StockMoveOut extends ProductMovement implements Comparable {
 
         return -1;
     }
+
+    public void prepareStocking() {
+        double i = 0 - this.getQuantity();
+        this.setQuantity(i);
+    }
 }

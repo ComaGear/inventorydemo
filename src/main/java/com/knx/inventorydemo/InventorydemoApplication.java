@@ -42,10 +42,10 @@ public class InventorydemoApplication {
 		TypeAliasRegistry typeAliasRegistry = configuration.getTypeAliasRegistry();
 		typeAliasRegistry.registerAlias("ProductMeta", ProductMeta.class);
 
-		configuration.addMapper(ProductMetaMapper.class);
-		configuration.addMapper(ProductMeasurementMapper.class);
-		configuration.addMapper(ProductMovementMapper.class);
-		configuration.addMapper(ProductStockingMapper.class);
+		// configuration.addMapper(ProductMetaMapper.class);
+		// configuration.addMapper(ProductMeasurementMapper.class);
+		// configuration.addMapper(ProductMovementMapper.class);
+		// configuration.addMapper(ProductStockingMapper.class);
 		//TODO: un annotation it. and register implement xml file and register spring bean.
 		// configuration.addMapper(ProductStockingMapper.class);
 		// configuration.addMapper(ProductMovementMapper.class);

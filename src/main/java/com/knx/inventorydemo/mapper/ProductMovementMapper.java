@@ -29,8 +29,9 @@ public interface ProductMovementMapper {
 
     public List<ProductMovement> bulkGetMoveOutByOrderIdsAndProductIds(List<StockMoveOut> movements);
 
-    // TODO: need implement
     public List<String> getExistsOrderIds(List<String> orderIds);
+
+    public List<String> getExistsDocsIds(List<String> docsIds);
 
     /**
      * @return Map key by order Id, value is record count size

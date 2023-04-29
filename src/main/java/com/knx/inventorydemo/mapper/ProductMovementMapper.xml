@@ -20,16 +20,17 @@
         <result column="quantity" property="quantity"/>
         <result column="used_uom" property="usedUOM"/>
 
-        <result column="vendor" property="vendorName"/>
+        <result column="docs_id" property="docsId"/>
+        <result column="row_of_item" property="itemRowOfDocs"/>
     </resultMap>
 
     
     <insert id="bulkInsertMoveIn" parameterType="java.util.List">
         insert into product_movement 
-            (relative_id, product_id, update_date, quantity, used_uom, vendor)
+            (relative_id, product_id, update_date, quantity, used_uom, docs_id, row_of_item)
         values
         <foreach collection="moveIns" item="moveIn" index="index" open="(" separator="),(" close=")">
-            #{moveIn.relativeId}, #{moveIn.productId}, #{moveIn.date}, #{moveIn.quantity}, #{moveIn.usedUOM}, #{moveIn.vendor}
+            #{moveIn.relativeId}, #{moveIn.productId}, #{moveIn.date}, #{moveIn.quantity}, #{moveIn.usedUOM}, #{moveIn.docsId}, #{moveIn.itemRowOfDocs}
         </foreach>
     </insert>
     
@@ -51,9 +52,10 @@
                     <if test="moveIn.quantity != null">quantity = #{moveIn.quantity}</if>
                     <if test="moveIn.usedUOM != null">used_uom = #{moveIn.usedUOM}</if>
                     <if test="moveIn.date != null">update_date = #{moveIn.date}</if>
-                    <if test="moveIn.vendorName != null">vendor = #{moveIn.vendorName}</if>
+                    <!-- <if test="moveIn.docsId != null">docs_id = #{moveIn.docsId}</if> -->
+                    <!-- <if test="moveIn.itemRowOfDocs != null">row_of_item = #{moveIn.itemRowOfDocs}</if> -->
                 </trim>
-            where relative_id = #{moveOut.relativeId} and channel = ${moveOut.salesChannel};
+            where relative_id = #{moveOut.relativeId} and docs_id = ${moveOut.docsId} and row_of_item = #{moveIn.itemRowOfDocs};
         </foreach>
     </update>
 
@@ -66,7 +68,6 @@
                     <if test="moveOut.quantity != null">quantity = #{moveOut.quantity}</if>
                     <if test="moveOut.usedUOM != null">used_uom = #{moveOut.usedUOM}</if>
                     <if test="moveOut.date != null">update_date = #{moveOut.date}</if>
-                    <!-- <if test="moveOut.vendorName != null">vendor = #{moveOut.vendorName}</if> -->
                 </trim>
             where relative_id = #{moveOut.relativeId} and channel = ${moveOut.salesChannel};
         </foreach>
@@ -113,6 +114,20 @@
         and order_id in
         <foreach collection="movements" index="indexO" open="(" separator="," close=")" item="move">
             #{move.OrderId}
+        </foreach>
+    </select>
+
+    <select id="getExistsOrderIds">
+        select distinct(order_id) from product_movement where in
+        <foreach collection="orderIds" open="(" close=")" separator="," item="orderId">
+            #{orderId}
+        </foreach>
+    </select>
+
+    <select id="getExistsDocsIds">
+        select distinct(docsId) from product_movement where in
+        <foreach collection="docsIds" item="docsId" open="(" separator="," close=")">
+            #{docsId}
         </foreach>
     </select>
 
@@ -173,9 +188,10 @@
             update_date date not null,
             quantity double not null,
             used_uom varchar(8) not null default "UNIT",
-            vendor varchar(20),
             channel varchar(8),
-            order_id varchar(10)
+            order_id varchar(10),
+            docs_id varchar(10),
+            row_of_item int
         );
     </insert>
 </mapper>
