@@ -23,10 +23,10 @@ import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.StockMoveOut;
 
 @SpringBootTest
-public class StockingBehaveTest {
+public class StockingPendingMovementTests {
 
 
-    static Logger log = LoggerFactory.getLogger(StockingBehaveTest.class);
+    static Logger log = LoggerFactory.getLogger(StockingPendingMovementTests.class);
     private static final String UNIT = "UNIT";
     private static final String ORIGIN = "merchant";
     @Autowired

@@ -10,16 +10,11 @@ public class Order {
     private String channel;
     private String status;
     private Date date;
-    private Integer size;
     
     // private String[] array = {"unsigned, pending, completed, cancelled, return"};
 
     public Integer getSize() {
-        return size;
-    }
-
-    public void setSize(Integer size) {
-        this.size = size;
+        return this.productMovements.size();
     }
 
     public String getChannel() {

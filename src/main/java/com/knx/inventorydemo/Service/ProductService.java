@@ -47,7 +47,7 @@ public class ProductService {
         
         productMetaMapper.addNewProduct(productMeta);
         measurementService.addNewMeasurementToProduct(productMeta, productMeasurement);
-        
+        stockingService.creatingNewStocking(productMeta.getId());
     }
 
     /**
