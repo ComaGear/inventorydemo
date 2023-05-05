@@ -83,7 +83,7 @@ public class StockingService{
         this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
         ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
 
-        // ensureStockingMovments turn stocking state and tehen put it to ensureStockingMap
+        // ensureStockingMovments turn stocking state and then put it to ensureStockingMap
         for(ProductMovement ensureMovement : ensureStockingMovements){
             if(ensureStockingMap.containsKey(ensureMovement.getRelativeId())){
                 Double stockDouble = ensureStockingMap.get(ensureMovement.getRelativeId());
@@ -277,7 +277,7 @@ public class StockingService{
         }
         pMovementMapper.bulkUpdateMoveOut(toUpdateMoveOuts);
         
-        // since any duplicate movements and updated movememnts is remove from both beingMoveOuts and repositoryMoveOuts.
+        // since any duplicate movements and updated movements is remove from both beingMoveOuts and repositoryMoveOuts.
         // iterate beingMoveOuts a new movement by orders. insert to repository movement and put it to ensureStockingMovements, remove
         //      from beingMoveOuts
         List<StockMoveOut> newMoveOuts = new LinkedList<StockMoveOut>();
@@ -339,10 +339,13 @@ public class StockingService{
 
             @Override
             public int compare(StockMoveIn o1, StockMoveIn o2) {
-                if(o2 == null || o2.getOrderId().isEmpty()) return -1;
-                if(o1 == null || o1.getOrderId().isEmpty()) return 1;
+                if(o2 == null || o2.getDocsId().isEmpty()) return -1;
+                if(o1 == null || o1.getDocsId().isEmpty()) return 1;
 
-                if(o1.getOrderId().compareTo(o2.getOrderId()) == 0){
+                if(o1.getDocsId().compareTo(o2.getDocsId()) == 0){
+
+                    if(o1.getItemRowOfDocs() < o2.getItemRowOfDocs()) return -1;
+                    if(o1.getItemRowOfDocs() > o2.getItemRowOfDocs()) return 1;
 
                     String o1RelativeId = null;
                     if(o1.getRelativeId() == null || o1.getRelativeId().isEmpty()) // || !o1.getRelativeId().contains("-")
@@ -357,14 +360,92 @@ public class StockingService{
                     return o1RelativeId.compareTo(o2RelativeId);
                 }
 
-                return o1.getOrderId().compareTo(o2.getOrderId());
+                return o1.getDocsId().compareTo(o2.getDocsId());
             }
         };
-        beingMoveOuts.sort(comparator);
+        beingMoveIns.sort(comparator);
         repositoryMoveIns.sort(comparator);
 
+        Iterator<StockMoveIn> repositoryIterator = repositoryMoveIns.iterator();
+        Iterator<StockMoveIn> beingIterator = beingMoveIns.iterator();
+        StockMoveIn rMoveIn = null;
+        StockMoveIn beingMoveIn = null;
+        boolean first = false;
+        if(repositoryIterator.hasNext()){
+            rMoveIn = repositoryIterator.next();
+            beingMoveIn = beingIterator.next();
+            first = true;
+        }
 
-        return null;
+        List<StockMoveIn> toUpdateMoveIns = new LinkedList<StockMoveIn>();
+
+        while(repositoryIterator.hasNext() || first){
+            if(beingMoveIn == null || rMoveIn == null) return null;
+            first = false;
+            int compare =  beingMoveIn.compareTo(rMoveIn);
+            
+            switch(compare){
+                case -1: // smallest than
+                    beingMoveIn = beingIterator.next();
+                    break;
+                case 1:
+                    rMoveIn = repositoryIterator.next();
+                    break;
+                case 0:
+                    double beingQuantity = beingMoveIn.getQuantity();
+                    double rQuantity = rMoveIn.getQuantity();
+                    double stocking = rQuantity - beingQuantity;
+                    String format = new DecimalFormat("#########.####").format(stocking);
+                    if(Double.valueOf(format) != 0.0000d){
+                        if(!ensureStockingMap.containsKey(beingMoveIn.getRelativeId()))
+                            ensureStockingMap.put(beingMoveIn.getRelativeId(), stocking);
+                        else {
+                            double double1 = ensureStockingMap.get(beingMoveIn.getRelativeId());
+                            double d = double1 + stocking;
+                            ensureStockingMap.put(beingMoveIn.getRelativeId(), d);
+                        }
+                        toUpdateMoveIns.add(beingMoveIn);
+                    }
+
+                    beingMoveIns.remove(beingMoveIn);
+                    beingMovements.remove(beingMoveIn);
+                    repositoryMoveIns.remove(rMoveIn);
+                    beingMoveIn = beingIterator.next();
+                    rMoveIn = repositoryIterator.next();
+
+                    break;
+            }
+        }
+        pMovementMapper.bulkUpdateMoveIn(toUpdateMoveIns);
+
+
+        List<StockMoveIn> newMoveOuts = new LinkedList<StockMoveIn>();
+        for(StockMoveIn moveIn: beingMoveIns){
+            ensureStockingMoveIns.add(moveIn);
+            beingMovements.remove(moveIn);
+            beingMoveIns.remove(moveIn);
+            newMoveOuts.add(moveIn);
+        }
+        pMovementMapper.bulkInsertMoveIn(newMoveOuts);
+
+
+        List<StockMoveIn> toDeleteMoveIns = new LinkedList<StockMoveIn>();
+        for(StockMoveIn moveOut : repositoryMoveIns){
+            if(ensureStockingMap.containsKey(moveOut.getRelativeId())){
+                Double double1 = ensureStockingMap.get(moveOut.getRelativeId());
+                double1 += moveOut.getQuantity();
+                ensureStockingMap.put(moveOut.getRelativeId(), double1);
+            } else
+                ensureStockingMap.put(moveOut.getRelativeId(), moveOut.getQuantity());
+            
+            repositoryMoveIns.remove(moveOut);
+            toDeleteMoveIns.add(moveOut);
+        }
+
+        HashMap<String, Object> resultMap = new HashMap<String, Object>();
+        resultMap.put(ENSURE_STOCKING_MAP, ensureStockingMap);
+        resultMap.put(ENSURE_STOCKING_MOVEMENTS, ensureStockingMoveIns);
+        return resultMap;
     }
 
     /**
@@ -571,19 +652,32 @@ public class StockingService{
         pendingMovements = new PriorityBlockingQueue<>();
     }
 
-    public StockingService(ProductStockingMapper productStockingMapper, ProductMovementMapper productMovementMapper, MeasurementService measurementService){
+    public StockingService(ProductStockingMapper productStockingMapper, ProductMovementMapper productMovementMapper, MeasurementService measurementService, ProductService productService){
         this.measurementService = measurementService;
         this.pMovementMapper = productMovementMapper;
         this.pStockingMapper = productStockingMapper;
+        this.productService = productService;
         this.pendingMovements = new PriorityBlockingQueue<>();
     }
 
     public void init() {
-        //TODO:
+        pStockingMapper.init();
+        pMovementMapper.init();
     }
 
     public List<ProductMovement> getAllMoveRecord(String productId) {
         return null;
+    }
+
+	public void creatingNewStocking(String id) {
+        
+        List<String> list = new LinkedList<String>();
+        list.add(id);
+        this.creatingNewStocking(list);
+	}
+
+    public void creatingNewStocking(List<String> ids){
+        pStockingMapper.createStockingByProductIds(ids);
     }
     
 }

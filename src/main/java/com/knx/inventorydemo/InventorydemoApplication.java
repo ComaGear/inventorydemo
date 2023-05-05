@@ -95,8 +95,10 @@ public class InventorydemoApplication {
 
 	@Bean
 	public StockingService stockingService(@Autowired ProductStockingMapper productStockingMapper, 
-		@Autowired ProductMovementMapper productMovementMapper, @Autowired MeasurementService measurementService){
-			StockingService stockingService = new StockingService(productStockingMapper, productMovementMapper, measurementService);
+		@Autowired ProductMovementMapper productMovementMapper, @Autowired MeasurementService measurementService,
+		@Autowired ProductService productService){
+			StockingService stockingService = new StockingService(productStockingMapper, productMovementMapper, measurementService
+				,productService);
 			stockingService.init();
 			return stockingService;
 		}
