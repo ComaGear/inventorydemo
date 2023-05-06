@@ -117,6 +117,22 @@
         </foreach>
     </select>
 
+    <select id="bulkGetMoveOutByOrderIds" resultMap="MoveOutMap">
+        select * from product_movement
+        where order_id in
+        <foreach collection="orderIds" item="orderId" open="(" close=")" separator=",">
+            #{orderId}
+        </foreach>
+    </select>
+
+    <select id="bulkGetMoveInByDocsIds" resultMap="MoveInMap">
+        select * from product_movement
+        where docs_id in
+        <foreach collection="docsIds" item="docsId" open="(" close=")" separator=",">
+            #{docsId}
+        </foreach>
+    </select>
+
     <select id="getExistsOrderIds">
         select distinct(order_id) from product_movement where in
         <foreach collection="orderIds" open="(" close=")" separator="," item="orderId">

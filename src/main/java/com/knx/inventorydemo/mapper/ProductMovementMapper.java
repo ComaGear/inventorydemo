@@ -29,6 +29,10 @@ public interface ProductMovementMapper {
 
     public List<ProductMovement> bulkGetMoveOutByOrderIdsAndProductIds(List<StockMoveOut> movements);
 
+    public List<StockMoveOut> bulkGetMoveOutByOrderIds(List<String> orderIds);
+
+    public List<ProductMovement> bulkGetMoveInByDocsIds(List<String> docsIds);
+
     public List<String> getExistsOrderIds(List<String> orderIds);
 
     public List<String> getExistsDocsIds(List<String> docsIds);

@@ -1,6 +1,6 @@
 package com.knx.inventorydemo.entity;
 
-public class StockMoveIn extends ProductMovement implements Comparable{
+public class StockMoveIn extends ProductMovement implements Comparable<StockMoveIn>{
     private String docsId; // repository column name: docs_id
     private int itemRowOfDocs; // repository column name: row_of_item
 
@@ -23,25 +23,22 @@ public class StockMoveIn extends ProductMovement implements Comparable{
     }
 
     @Override
-    public int compareTo(Object o) {
-        if(o == null) return -1;
+    public int compareTo(StockMoveIn oMoveIn) {
+        if(oMoveIn == null) return -1;
+        
+        if(oMoveIn.getDocsId().equals(this.getDocsId())
+            && oMoveIn.getRelativeId().equals(getRelativeId()))
+            return 0;
+        
+        if(oMoveIn.getDocsId() == null || oMoveIn.getDocsId().isEmpty()) return -1;
+        if(this.getDocsId() == null || this.getDocsId().isEmpty()) return 1;
 
-        if(o instanceof StockMoveIn){
-            StockMoveIn oMoveIn = (StockMoveIn) o;
-            if(oMoveIn.getDocsId().equals(this.getDocsId())
-                && oMoveIn.getRelativeId().equals(getRelativeId()))
+        if(oMoveIn.getDocsId().compareTo(this.getDocsId()) == 0){
+            if(oMoveIn.getItemRowOfDocs() == this.getItemRowOfDocs())
                 return 0;
-            
-            if(oMoveIn.getDocsId() == null || oMoveIn.getDocsId().isEmpty()) return -1;
-            if(this.getDocsId() == null || this.getDocsId().isEmpty()) return 1;
-
-            if(oMoveIn.getDocsId().compareTo(this.getDocsId()) == 0){
-                if(oMoveIn.getItemRowOfDocs() == this.getItemRowOfDocs())
-                    return 0;
-                else
-                    return oMoveIn.getItemRowOfDocs() > this.getItemRowOfDocs()
-                        ? 1 : -1;
-            }
+            else
+                return oMoveIn.getItemRowOfDocs() > this.getItemRowOfDocs()
+                    ? 1 : -1;
         }
 
         return -1;

@@ -5,7 +5,7 @@ import java.util.Date;
 
 public class StockInDocs {
     private String docsId;
-    private ArrayList<ProductMovement> movements;
+    private ArrayList<StockMoveIn> movements;
     private Date date;
 
     public boolean hasMovement(){
@@ -24,15 +24,15 @@ public class StockInDocs {
         this.docsId = docsId;
         return this;
     }
-    public ArrayList<ProductMovement> getMovements() {
+    public ArrayList<StockMoveIn> getMovements() {
         return movements;
     }
-    public StockInDocs pushMoveIn(ProductMovement movement) {
+    public StockInDocs pushMoveIn(StockMoveIn movement) {
         if(movement == null) throw new NullPointerException("movement is null");
         if(movement.getProductId() == null || movement.getProductId().isEmpty()) 
             throw new IllegalArgumentException("movement is not completed");
 
-        if(movements == null) this.movements = new ArrayList<ProductMovement>();
+        if(movements == null) this.movements = new ArrayList<StockMoveIn>();
         this.movements.add(movement);
         return this;
     }

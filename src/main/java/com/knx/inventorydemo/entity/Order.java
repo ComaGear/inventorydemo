@@ -6,7 +6,7 @@ import java.util.Date;
 public class Order {
     
     private String orderId;
-    private ArrayList<ProductMovement> productMovements;
+    private ArrayList<StockMoveOut> productMovements;
     private String channel;
     private String status;
     private Date date;
@@ -54,11 +54,11 @@ public class Order {
     }
 
 
-    public ArrayList<ProductMovement> getMovements(){
+    public ArrayList<StockMoveOut> getMovements(){
         return productMovements;
     }
 
-    public Order pushMovement(ProductMovement moves){
+    public Order pushMovement(StockMoveOut moves){
         if(moves == null) throw new NullPointerException("moves is null");
         if(moves.getProductId().isEmpty() || moves.getProductId().equals("")
             || moves.getQuantity() == 0) throw new IllegalArgumentException("moves's product id is emptry");
