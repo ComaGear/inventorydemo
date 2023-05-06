@@ -2,7 +2,6 @@ package com.knx.inventorydemo.Service;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import com.knx.inventorydemo.entity.Order;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMovement;
+import com.knx.inventorydemo.entity.StockInDocs;
 import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;
 import com.knx.inventorydemo.entity.Stocking;
@@ -149,7 +149,7 @@ public class StockingService{
      * @param beingMovements a list of source movements being insert to repository.
      * @return a list of ProductMovement not contained in OrderIdSet.
      */
-    private List<ProductMovement> fetchNotExistsRecordForOrderId(List<String> OrderIdSet, LinkedList<ProductMovement> beingMovements) {
+    private List<ProductMovement> getNotExistsRecordForOrderId(List<String> OrderIdSet, LinkedList<ProductMovement> beingMovements) {
 
         LinkedList<ProductMovement> notExistRecordMovements = new LinkedList<ProductMovement>();
         HashSet<String> notExistOrderIds = new HashSet<String>();
@@ -165,6 +165,27 @@ public class StockingService{
             }
         }
         return notExistRecordMovements;
+    }
+
+    public List<Order> getOrderRecord(List<String> orderIds){
+        if(orderIds == null || orderIds.isEmpty()) throw new NullPointerException();
+
+        List<StockMoveOut> productMovements = pMovementMapper.bulkGetMoveOutByOrderIds(orderIds);
+
+        HashMap<String, Order> orderMap = new HashMap<String, Order>();
+
+        for(StockMoveOut moveOut : productMovements){
+            if(orderMap.containsKey(moveOut.getOrderId())){
+                orderMap.get(moveOut.getOrderId()).pushMovement(moveOut);
+            } else {
+                Order order = new Order().setOrderId(moveOut.getOrderId()).setChannel(moveOut.getSalesChannel())
+                    .setDate(moveOut.getDate());
+                orderMap.put(moveOut.getOrderId(), order);
+            }
+        }
+
+        List<Order> orders = (List<Order>) orderMap.values();
+        return orders;
     }
 
     private HashMap<String, Object> stockMoveOutUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveOut> beingMoveOuts){
@@ -530,6 +551,63 @@ public class StockingService{
         return unablePushOrders.isEmpty() ? null : unablePushOrders;
     }
 
+    public List<StockMoveIn> pushMoveIns(StockInDocs docs){
+        
+        List<String> productIds = new LinkedList<String>();
+        Iterator<StockMoveIn> checkingIterator = docs.getMovements().iterator();
+        while(checkingIterator.hasNext()){
+            StockMoveIn next = checkingIterator.next();
+            if(!productIds.contains(next.getProductId())) productIds.add(next.getProductId());
+        }
+
+        List<String> unactivityList = productService.getProductUnactivity(productIds);
+
+        // throw exception return to caller and give a list of unactitvity product to exception member that has given following.
+        if(unactivityList != null && !unactivityList.isEmpty()){
+            ProductUnactivityException exception = new ProductUnactivityException("checked unactivity product has" + unactivityList.toString());
+            exception.setUnactivityProductList(unactivityList);
+            throw exception;
+        }
+
+        LinkedList<StockMoveIn> unablePushList = new LinkedList<StockMoveIn>();
+        Iterator<StockMoveIn> iterator = docs.getMovements().iterator();
+        while(iterator.hasNext()){
+            StockMoveIn moves = iterator.next();
+            boolean added = this.pushMovement(moves, true);
+            if(!added) {
+                unablePushList.add(moves);
+            }
+        }
+        return unablePushList.isEmpty() ? null : unablePushList;
+    }
+
+    public Map<StockInDocs, List<String>> pushMoveIns(List<StockInDocs> docsList){
+        if(docsList == null || docsList.isEmpty()) throw new NullPointerException("docsList is null or emptry");
+
+        HashMap<StockInDocs, List<String>> unablePushDocsList = new HashMap<StockInDocs, List<String>>();
+
+        // a list of unable insert to pending cause by contains product is not activity. reject certain order to verify.
+        List<StockInDocs> unInsertOrders = new LinkedList<StockInDocs>();
+
+        for(StockInDocs docs : docsList){
+
+            List<String> unactivityProducts = null;
+
+            try{
+                this.pushMoveIns(docs);
+            } catch(ProductUnactivityException e){ 
+                unactivityProducts = e.getUnactivityProductList(); 
+            }
+
+            if(unactivityProducts != null){
+                unInsertOrders.add(docs);
+                unablePushDocsList.put(docs, unactivityProducts);
+            }
+        }
+
+        return unablePushDocsList.isEmpty() ? null : unablePushDocsList;
+    }
+
     public List<ProductMovement> fetchMovesQueueMovementByRelativeId(List<String> relativeIds){
         if(relativeIds == null || relativeIds.isEmpty()) throw new NullPointerException(); // give a message.
 
@@ -648,23 +726,6 @@ public class StockingService{
         return productMeasByRelativeIds;
     }
 
-    public StockingService(){
-        pendingMovements = new PriorityBlockingQueue<>();
-    }
-
-    public StockingService(ProductStockingMapper productStockingMapper, ProductMovementMapper productMovementMapper, MeasurementService measurementService, ProductService productService){
-        this.measurementService = measurementService;
-        this.pMovementMapper = productMovementMapper;
-        this.pStockingMapper = productStockingMapper;
-        this.productService = productService;
-        this.pendingMovements = new PriorityBlockingQueue<>();
-    }
-
-    public void init() {
-        pStockingMapper.init();
-        pMovementMapper.init();
-    }
-
     public List<ProductMovement> getAllMoveRecord(String productId) {
         return null;
     }
@@ -679,5 +740,22 @@ public class StockingService{
     public void creatingNewStocking(List<String> ids){
         pStockingMapper.createStockingByProductIds(ids);
     }
+
+    public void init() {
+        pStockingMapper.init();
+        pMovementMapper.init();
+    }
     
+    public StockingService(){
+        pendingMovements = new PriorityBlockingQueue<>();
+    }
+
+    public StockingService(ProductStockingMapper productStockingMapper, ProductMovementMapper productMovementMapper, MeasurementService measurementService, ProductService productService){
+        this.measurementService = measurementService;
+        this.pMovementMapper = productMovementMapper;
+        this.pStockingMapper = productStockingMapper;
+        this.productService = productService;
+        this.pendingMovements = new PriorityBlockingQueue<>();
+    }
+
 }
