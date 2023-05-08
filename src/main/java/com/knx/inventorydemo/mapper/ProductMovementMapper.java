@@ -31,6 +31,8 @@ public interface ProductMovementMapper {
 
     public List<StockMoveOut> bulkGetMoveOutByOrderIds(List<String> orderIds);
 
+    public List<StockMoveIn> bulkGetMoveOutByDocsIds(List<String> docsIds);
+
     public List<ProductMovement> bulkGetMoveInByDocsIds(List<String> docsIds);
 
     public List<String> getExistsOrderIds(List<String> orderIds);
@@ -50,7 +52,9 @@ public interface ProductMovementMapper {
 
     public Set<ProductMovement> bulkGetMoveOutSpecifyDate(Date startDate, Date endDate);
 
-    public int bulkDeleteMovements(List<String> relativeIds, List<String> productIds);
+    public int bulkRemoveMoveOuts(List<StockMoveOut> toDeleteMoveOuts);
+
+    public int bulkRemoveMoveIns(List<StockMoveIn> toDeleteMoveIns);
 
     public void init();
 }

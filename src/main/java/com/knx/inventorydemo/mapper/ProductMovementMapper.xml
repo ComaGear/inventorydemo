@@ -125,6 +125,14 @@
         </foreach>
     </select>
 
+    <select id="bulkGetMoveOutByDocsIds" resultMap="MoveInMap">
+        select * from product_movement
+        where docs_id in
+        <foreach collection="docsIds" item="docsId" open="(" close=")" separator=",">
+            #{docsId}
+        </foreach>
+    </select>
+
     <select id="bulkGetMoveInByDocsIds" resultMap="MoveInMap">
         select * from product_movement
         where docs_id in
@@ -186,7 +194,7 @@
         where update_date &gt; #{startDate} and update_date &lt; #{endDate}
     </select>
 
-    <delete id="bulkDeleteMovements" parameterType="java.util.List">
+    <!-- <delete id="bulkDeleteMovements" parameterType="java.util.List">
         delete LOW_PRIORITY product_movement where product_id in
         <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
             #{productId}
@@ -194,6 +202,28 @@
         and relative_id in
         <foreach collection="relativeIds" index="index" item="relativeId" open="(" close=")" separator=",">
             #{relativeId}
+        </foreach>
+    </delete> -->
+
+    <delete id="bulkRemoveMoveOuts">
+        delete LOW_PRIORITY product_movement where relative_id in
+        <foreach collection="toDeleteMoveOuts" item="moveOut" open="(" close=")" separator=",">
+            #{moveOut.relativeId}
+        </foreach>
+        and order_id in
+        <foreach collection="toDeleteMoveOuts" item="moveOut" open="(" close=")" separator=",">
+            #{moveOut.orderId}
+        </foreach>
+    </delete>
+
+    <delete id="bulkRemoveMoveIns">
+        delete LOW_PRIORITY product_movement where row_of_item in
+        <foreach collection="toDeleteMoveIns" item="moveIn" open="(" close=")" separator=",">
+            #{moveIn.itemRowOfDocs}
+        </foreach>
+        and docs_Id in
+        <foreach collection="toDeleteMoveIns" item="moveIn" open="(" close=")" separator=",">
+            #{moveIn.docsId}
         </foreach>
     </delete>
 

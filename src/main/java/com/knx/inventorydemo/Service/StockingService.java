@@ -172,7 +172,7 @@ public class StockingService{
 
         List<StockMoveOut> productMovements = pMovementMapper.bulkGetMoveOutByOrderIds(orderIds);
 
-        HashMap<String, Order> orderMap = new HashMap<String, Order>();
+        Map<String, Order> orderMap = new HashMap<String, Order>();
 
         for(StockMoveOut moveOut : productMovements){
             if(orderMap.containsKey(moveOut.getOrderId())){
@@ -186,6 +186,26 @@ public class StockingService{
 
         List<Order> orders = (List<Order>) orderMap.values();
         return orders;
+    }
+
+    public List<StockInDocs> getDocsRecord(List<String> docsIds){
+        if(docsIds == null || docsIds.isEmpty()) throw new NullPointerException();
+
+        List<StockMoveIn> productMovements = pMovementMapper.bulkGetMoveOutByDocsIds(docsIds);
+
+        Map<String, StockInDocs> docsMap = new HashMap<String, StockInDocs>();
+
+        for(StockMoveIn moveIn : productMovements){
+            if(docsMap.containsKey(moveIn.getDocsId())){
+                docsMap.get(moveIn.getDocsId()).pushMoveIn(moveIn);
+            } else {
+                StockInDocs stockInDocs = new StockInDocs().setDocsId(moveIn.getDocsId()).setDate(moveIn.getDate());
+                docsMap.put(moveIn.getDocsId(), stockInDocs);
+            }
+        }
+
+        List<StockInDocs> docsList = (List<StockInDocs>) docsMap.values();
+        return docsList;
     }
 
     private HashMap<String, Object> stockMoveOutUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveOut> beingMoveOuts){
@@ -310,7 +330,7 @@ public class StockingService{
         }
         pMovementMapper.bulkInsertMoveOut(newMoveOuts);
 
-        // iterate repositoryMoveOuts remains to be delete movements. figure down quantity return to Stocking, putting return quantity
+        // iterate repositoryMoveOuts remains toDelete movements. figure down quantity return to Stocking, putting return quantity
         //      ensureStockingList, remove from repositoryMoveOuts.
         List<StockMoveOut> toDeleteMoveOuts = new LinkedList<StockMoveOut>();
         for(StockMoveOut moveOut : repositoryMoveOuts){
@@ -324,6 +344,7 @@ public class StockingService{
             repositoryMoveOuts.remove(moveOut);
             toDeleteMoveOuts.add(moveOut);
         }
+        pMovementMapper.bulkRemoveMoveOuts(toDeleteMoveOuts);
 
         // finally step, return both ensureStockingMovements and ensureStockingList.=
         HashMap<String, Object> resultMap = new HashMap<String, Object>();
@@ -462,11 +483,21 @@ public class StockingService{
             repositoryMoveIns.remove(moveOut);
             toDeleteMoveIns.add(moveOut);
         }
+        pMovementMapper.bulkRemoveMoveIns(toDeleteMoveIns);
 
         HashMap<String, Object> resultMap = new HashMap<String, Object>();
         resultMap.put(ENSURE_STOCKING_MAP, ensureStockingMap);
         resultMap.put(ENSURE_STOCKING_MOVEMENTS, ensureStockingMoveIns);
         return resultMap;
+    }
+
+    
+	public void removeMoveOuts(List<Order> toDeleteOrder) {
+
+	}
+
+    public void removeMoveIns(List<StockInDocs> toDeleteDocs){
+
     }
 
     /**
@@ -498,7 +529,7 @@ public class StockingService{
         if(order == null || !order.hasMovement()) { throw new NullPointerException("order is null or emptry."); }
 
         LinkedList<String> toCheckingList = new LinkedList<String>();
-        Iterator<ProductMovement> checkingIterator = order.getMovements().iterator();
+        Iterator<StockMoveOut> checkingIterator = order.getMovements().iterator();
         while(checkingIterator.hasNext()){
             toCheckingList.add(checkingIterator.next().getProductId());
         }
@@ -512,7 +543,7 @@ public class StockingService{
         }
 
         LinkedList<ProductMovement> unablePushList = new LinkedList<ProductMovement>();
-        Iterator<ProductMovement> iterator = order.getMovements().iterator();
+        Iterator<StockMoveOut> iterator = order.getMovements().iterator();
         while(iterator.hasNext()){
             ProductMovement moves = iterator.next();
             boolean added = this.pushMovement(moves, true);
