@@ -56,14 +56,14 @@ public class StockingPendingMovementTests {
                 .setOrderId("20230105WEW")
                 .setChannel(ORIGIN);
     
-        multiMovesOrder.pushMovement(new StockMoveOut()
+        multiMovesOrder.pushMovement((StockMoveOut) new StockMoveOut()
                 .setRelativeId(multiMovesOrder.getOrderId())
                 .setProductId(product.getId())
                 .setDate(Date.valueOf(LocalDate.now()))
                 .setQuantity(2)
                 .setUsedUOM(UNIT)
                 .setSalesChannel(multiMovesOrder.getChannel()))
-            .pushMovement(new StockMoveOut()
+            .pushMovement((StockMoveOut) new StockMoveOut()
                 .setRelativeId(multiMovesOrder.getOrderId())
                 .setProductId(product.getId())
                 .setDate(Date.valueOf(LocalDate.now()))
@@ -75,7 +75,7 @@ public class StockingPendingMovementTests {
             .setOrderId("220230505UE")
             .setChannel(ORIGIN);
         
-        singleMovesOrder.pushMovement(new StockMoveOut()
+        singleMovesOrder.pushMovement((StockMoveOut) new StockMoveOut()
                 .setRelativeId(singleMovesOrder.getOrderId())
                 .setProductId(product.getId())
                 .setDate(Date.valueOf(LocalDate.now()))

@@ -24,5 +24,5 @@ public interface ProductStockingMapper {
 
     public List<ProductStocking> bulkGetStockingByProductIds(List<String> productIds);
 
-    public void deleteByProductIds(LinkedList<String> productIds);
+    public int deleteByProductIds(List<String> productIds);
 }

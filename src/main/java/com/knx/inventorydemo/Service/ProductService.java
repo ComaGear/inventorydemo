@@ -79,7 +79,10 @@ public class ProductService {
         List<ProductMovement> moves = stockingService.getAllMoveRecord(productId);
 
         if(moves == null || moves.isEmpty()){
+            stockingService.removeStockingForProductId(productId);
+            measurementService.removeAllMeasureForProductId(productId);
             int result = productMetaMapper.deleteProductMetaById(productId);
+            stockingService.removeStockingForProductId(productId);
             return result == 1 ? 1 : -1;
         } else {
             return -1;

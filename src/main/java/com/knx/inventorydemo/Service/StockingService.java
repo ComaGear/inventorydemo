@@ -493,11 +493,29 @@ public class StockingService{
 
     
 	public void removeMoveOuts(List<Order> toDeleteOrder) {
+        if(toDeleteOrder == null || toDeleteOrder.isEmpty()) throw new NullPointerException();
 
+        List<StockMoveOut> toDelete = new LinkedList<StockMoveOut>();
+        Iterator<Order> iterator = toDeleteOrder.iterator();
+        while(iterator.hasNext()){
+            Order next = iterator.next();
+            toDelete.addAll(next.getMovements());
+        }
+
+        pMovementMapper.bulkRemoveMoveOuts(toDelete);
 	}
 
     public void removeMoveIns(List<StockInDocs> toDeleteDocs){
+        if(toDeleteDocs == null || toDeleteDocs.isEmpty()) throw new NullPointerException();
 
+        List<StockMoveIn> toDelete = new LinkedList<StockMoveIn>();
+        Iterator<StockInDocs> iterator = toDeleteDocs.iterator();
+        while(iterator.hasNext()){
+            StockInDocs next = iterator.next();
+            toDelete.addAll(next.getMovements());
+        }
+
+        pMovementMapper.bulkRemoveMoveIns(toDelete);
     }
 
     /**
@@ -770,6 +788,14 @@ public class StockingService{
 
     public void creatingNewStocking(List<String> ids){
         pStockingMapper.createStockingByProductIds(ids);
+    }
+
+    public boolean removeStockingForProductId(String productId){
+        if(productId == null || productId.isEmpty()) throw new NullPointerException();
+
+        List<String> list = new LinkedList<String>();
+        list.add(productId);
+        return pStockingMapper.deleteByProductIds(list) > 0;
     }
 
     public void init() {

@@ -3,6 +3,7 @@ package com.knx.inventorydemo;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.contains;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -82,8 +83,8 @@ public class StockingTests {
         StockMoveIn moveIn9971CTNby2 = (StockMoveIn) new StockMoveIn().setProductId(productMeta9971.getId()).setDate(date)
             .setQuantity(2).setUsedUOM("CTN");
 
-            StockMoveOut moveOut1133UNITby1 = (StockMoveOut) new StockMoveOut().setProductId(productMeta1133.getId()).setDate(date)
-            .setQuantity(1).setUsedUOM("UNIT");
+        StockMoveOut moveOut1133UNITby1 = (StockMoveOut) new StockMoveOut().setProductId(productMeta1133.getId()).setDate(date)
+        .setQuantity(1).setUsedUOM("UNIT");
             
         
         orderO1212MERCHANTz2 = new Order().setOrderId("O1212").setChannel("MERCHANT").setDate(date);
@@ -118,7 +119,7 @@ public class StockingTests {
     }
 
     @Test 
-    public void insertOrderToRepository(){
+    public void insertOrderAndDocsToRepository(){
         stockingService.pushMovement(orderO1212MERCHANTz2);
         stockingService.pushMovement(orderO2211MERCHANTz1);
         stockingService.pushMoveIns(docsI1112z3);
@@ -177,26 +178,75 @@ public class StockingTests {
 
     @Test
     public void insertExistOrderWithRejectReturn(){
+        stockingService.pushMovement(orderO2211MERCHANTz1);
+        stockingService.updateToRepository();
 
+        List<String> orderIds = new LinkedList<String>();
+        orderIds.add(orderO2211MERCHANTz1.getOrderId());
+        List<Order> orderRecord = stockingService.getOrderRecord(orderIds);
+        assertTrue(orderRecord.get(0).getSize().equals(orderO2211MERCHANTz1.getSize()),
+            "updateToRepository method has not insert a same order's movement record again to repository.");
     }
 
     @Test
-    public void updateModifiedOrderToRepository(){
+    public void updateModifiedOrderAndDocsToRepository(){
+
+        Date date = new Date(System.currentTimeMillis());
         
         //a duplicate order but new moveOut ensure inserted
+        StockMoveOut moveOut9971CTNby1 = (StockMoveOut) new StockMoveOut().setProductId(productMeta9971.getId())
+            .setQuantity(1).setUsedUOM("CTN").setDate(date);
+    
+        orderO1212MERCHANTz2.pushMovement(moveOut9971CTNby1);
+        stockingService.pushMovement(orderO1133MERCHANTz1);
+        stockingService.updateToRepository();
+
+        ArrayList<String> orderIds = new ArrayList<String>();
+        orderIds.add(orderO1212MERCHANTz2.getOrderId());
+        List<Order> orderRecord = stockingService.getOrderRecord(orderIds);
+        boolean exists = false;
+        for(StockMoveOut moveOut : orderRecord.get(0).getMovements()){
+            if(exists == false) exists = moveOut.getRelativeId().equals(moveOut9971CTNby1.getRelativeId());
+        }
+        assertTrue(exists, "a order inserted before to repository, but inserting again with a new moveOut updated is success");
+
 
         //a duplicate order but got moveOut has been removed ensure removed
+        orderO1212MERCHANTz2.removeMovementByRelativeId(moveOut9971CTNby1.getRelativeId());
+        stockingService.pushMovement(orderO1212MERCHANTz2);
+        stockingService.updateToRepository();
 
-        //a duplicate order exists moveOut with reject return ensure correct size.
+        orderIds.clear();
+        orderIds.add(orderO1212MERCHANTz2.getOrderId());
+        orderRecord = stockingService.getOrderRecord(orderIds);
+        boolean notExist = false;
+        for(StockMoveOut moveOut : orderRecord.get(0).getMovements()){
+            if(exists == false) exists = moveOut.getRelativeId().equals(moveOut9971CTNby1.getRelativeId());
+        }
+        assertFalse(notExist, "a order has removed moveOut then updating repository also removed.");
     }
 
     @Test
-    public void removeAllMoveOutByOrderShouldEnsureAllRemoved(){
-
+    public void removeAllMoveOutByOrderAndMoveInByDocsShouldEnsureAllRemoved(){
+        // a list of order removing from test repository inserted by above.
+        LinkedList<Order> toDeleteOrder = new LinkedList<Order>();
+        toDeleteOrder.add(orderO1133MERCHANTz1);
+        toDeleteOrder.add(orderO1212MERCHANTz2);
+        toDeleteOrder.add(orderO2211MERCHANTz1);
+        
+        stockingService.removeMoveOuts(toDeleteOrder);
+        
+        // a list of stockInDocs removing from test repository inserted by above.
+        LinkedList<StockInDocs> toDeleteDocs = new LinkedList<StockInDocs>();
+        toDeleteDocs.add(docsI1112z3);
+        
+        stockingService.removeMoveIns(toDeleteDocs);
     }
 
     @Test
-    public void insertDocsMoveInToRepository(){
-
+    public void removeAllProductMetaMeasureStocking(){
+        productService.delete(productMeta1121);
+        productService.delete(productMeta1133);
+        productService.delete(productMeta9971);
     }
 }

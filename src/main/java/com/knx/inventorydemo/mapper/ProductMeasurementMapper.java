@@ -31,5 +31,10 @@ public interface ProductMeasurementMapper {
     
     public void measInit();
 
+    public int bulkRemoveMeasureByProductIds(List<String> productIds);
+
+    // TODO implementing bulkRemoveMeasureByRelativeIds
+    public int bulkRemoveMeasureByRelativeIds(List<String> relativeIdList);
+
     // public void updateRuleInit(String layer);
 }

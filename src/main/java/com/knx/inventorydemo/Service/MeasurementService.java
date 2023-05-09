@@ -116,6 +116,19 @@ public class MeasurementService  {
         productMeasurementMapper.addMeasureTo(measurement.getSalesChannel(), measurement);
     }
 
+    public boolean removeAllMeasureForProductId(String productId){
+        if(productId == null || productId.isEmpty()) throw new NullPointerException();
+
+        List<String> list = new LinkedList<String>();
+
+        return productMeasurementMapper.bulkRemoveMeasureByProductIds(list) > 0;
+    }
+
+    public boolean removeMeasureByRelativeId(String relativeId){
+        // TODO
+        return false;
+    }
+
     private ProductMeasurement getProductMeasByRelativeIdWithChannel(String relativeId, String channel) {
         if(relativeId == null ||relativeId.equals("")) throw new NullPointerException("param of relative id is null");
         if(channel == null || channel.equals("")) throw new NullPointerException("layer is null");
@@ -196,6 +209,8 @@ public class MeasurementService  {
 
         return parentSku;
     }
+
+    
 
     public void init() {
         productMeasurementMapper.measInit();

@@ -78,6 +78,13 @@
             unique key (relative_id)
         );
     </insert>
+
+    <delete id="bulkRemoveMeasureByProductIds">
+        delete LOW_PRIORITY product_measurement where product_id in
+        <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+    </delete>
 <!-- 
     <select id="checkLayerExists" resultType="Integer" parameterType="String">
         select
