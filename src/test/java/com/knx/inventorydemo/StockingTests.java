@@ -61,7 +61,8 @@ public class StockingTests {
         productMeta1121.setId("1121").setName("apollo cake").setDefaultUom("UNIT").setActivity(true);
 
         measureCTNfor9971 = new ProductMeasurement();
-        measureCTNfor9971.setProductId(productMeta9971.getId()).setUOM_name("CTN").setMeasurement(6);
+        measureCTNfor9971.setProductId(productMeta9971.getId()).setUOM_name("CTN").setMeasurement(6)
+            .setRelativeId(productMeta9971.getId() + "-" + "CTN").setSalesChannel("MERCHANT");
 
         // unactivity product
         productMeta1133 = new ProductMeta();
@@ -70,21 +71,28 @@ public class StockingTests {
 
         Date date = new Date(System.currentTimeMillis());
         StockMoveOut moveOut9971UNITby5 = (StockMoveOut) new StockMoveOut().setProductId(productMeta9971.getId()).setDate(date)
-            .setQuantity(5).setUsedUOM("UNIT");
+            .setQuantity(5).setUsedUOM("UNIT").setSalesChannel("MERCHANT");
+        moveOut9971UNITby5.setRelativeId(moveOut9971UNITby5.getProductId() + "-" + moveOut9971UNITby5.getUsedUOM());
+
         StockMoveOut moveOut9971CTNby2 = (StockMoveOut) new StockMoveOut().setProductId(productMeta9971.getId()).setDate(date)
-            .setQuantity(2).setUsedUOM("CTN");
+            .setQuantity(2).setUsedUOM("CTN").setSalesChannel("MERCHANT");
+        moveOut9971CTNby2.setRelativeId(moveOut9971CTNby2.getProductId() + "-" + moveOut9971CTNby2.getUsedUOM());
         StockMoveOut moveOut1121UNITby200 = (StockMoveOut) new StockMoveOut().setProductId(productMeta1121.getId()).setDate(date)
-            .setQuantity(200).setUsedUOM("UNIT");
+            .setQuantity(200).setUsedUOM("UNIT").setSalesChannel("MERCHANT");
+        moveOut1121UNITby200.setRelativeId(moveOut1121UNITby200.getProductId() + "-" + moveOut1121UNITby200.getUsedUOM());
 
         StockMoveIn moveIn9971UNITby200 = (StockMoveIn) new StockMoveIn().setProductId(productMeta9971.getId()).setDate(date)
-            .setQuantity(200).setUsedUOM("UNIT");
+            .setQuantity(200).setUsedUOM("UNIT").setSalesChannel("MERCHANT");
+        moveIn9971UNITby200.setRelativeId(moveIn9971UNITby200.getProductId() + "-" + moveIn9971UNITby200.getUsedUOM());
         StockMoveIn moveIn1121UNITby500 = (StockMoveIn) new StockMoveIn().setProductId(productMeta1121.getId()).setDate(date)
-            .setQuantity(500).setUsedUOM("UNIT");
+            .setQuantity(500).setUsedUOM("UNIT").setSalesChannel("MERCHANT");
+        moveIn1121UNITby500.setRelativeId(moveIn1121UNITby500.getProductId() + "-" + moveIn1121UNITby500.getUsedUOM());
         StockMoveIn moveIn9971CTNby2 = (StockMoveIn) new StockMoveIn().setProductId(productMeta9971.getId()).setDate(date)
-            .setQuantity(2).setUsedUOM("CTN");
+            .setQuantity(2).setUsedUOM("CTN").setSalesChannel("MERCHANT");
+        moveIn9971CTNby2.setRelativeId(moveIn9971CTNby2.getProductId() + "-" + moveIn9971CTNby2.getUsedUOM());
 
         StockMoveOut moveOut1133UNITby1 = (StockMoveOut) new StockMoveOut().setProductId(productMeta1133.getId()).setDate(date)
-        .setQuantity(1).setUsedUOM("UNIT");
+        .setQuantity(1).setUsedUOM("UNIT").setSalesChannel("MERCHANT");
             
         
         orderO1212MERCHANTz2 = new Order().setOrderId("O1212").setChannel("MERCHANT").setDate(date);
@@ -93,7 +101,7 @@ public class StockingTests {
         orderO1212MERCHANTz2.pushMovement(moveOut1121UNITby200);
         moveOut1121UNITby200.setOrderId(orderO1212MERCHANTz2.getOrderId());
         
-        orderO2211MERCHANTz1 = new Order().setOrderId("o2211").setChannel("MERCHANT").setDate(date);
+        orderO2211MERCHANTz1 = new Order().setOrderId("O2211").setChannel("MERCHANT").setDate(date);
         orderO2211MERCHANTz1.pushMovement(moveOut9971CTNby2);
         moveOut9971CTNby2.setOrderId(orderO2211MERCHANTz1.getOrderId());
 
@@ -116,6 +124,7 @@ public class StockingTests {
         productService.addNewProduct(productMeta9971);
         measurementService.addNewMeasurementToProduct(productMeta9971, measureCTNfor9971);
         productService.addNewProduct(productMeta1121);
+        productService.addNewProduct(productMeta1133);
     }
 
     @Test 
@@ -133,17 +142,19 @@ public class StockingTests {
         List<String> moveOuts = new LinkedList<String>();
         for(StockMoveOut moveOut : orderO1212MERCHANTz2.getMovements()) {
             String id = moveOut.getOrderId() + "-" + moveOut.getRelativeId() + "-" + moveOut.getQuantity() + "-" + moveOut.getUsedUOM();
+            log.info("moveOuts adding with : " + id);
             moveOuts.add(id);
         }
         for(StockMoveOut moveOut : orderO2211MERCHANTz1.getMovements()) {
             String id = moveOut.getOrderId() + "-" + moveOut.getRelativeId() + "-" + moveOut.getQuantity() + "-" + moveOut.getUsedUOM();
+            log.info("moveOuts adding with : " + id);
             moveOuts.add(id);
         }
         for(Order order : orderRecord){
             for(StockMoveOut moveOut : order.getMovements()){
                 String id = moveOut.getOrderId() + "-" + moveOut.getRelativeId() + "-" + moveOut.getQuantity() + "-" + moveOut.getUsedUOM();
                 // log.debug("iterating to " + id);
-                assertTrue(moveOuts.contains(id), "it does contained from repository" + id);
+                assertTrue(moveOuts.contains(id), "it does contained from repository " + id);
             }
         }
 
@@ -195,10 +206,12 @@ public class StockingTests {
         
         //a duplicate order but new moveOut ensure inserted
         StockMoveOut moveOut9971CTNby1 = (StockMoveOut) new StockMoveOut().setProductId(productMeta9971.getId())
-            .setQuantity(1).setUsedUOM("CTN").setDate(date);
+            .setQuantity(1).setUsedUOM("CTN").setDate(date).setSalesChannel("MERCHANT");
+        moveOut9971CTNby1.setRelativeId(moveOut9971CTNby1.getProductId() + "-" + moveOut9971CTNby1.getUsedUOM());
     
         orderO1212MERCHANTz2.pushMovement(moveOut9971CTNby1);
-        stockingService.pushMovement(orderO1133MERCHANTz1);
+        moveOut9971CTNby1.setOrderId(orderO1212MERCHANTz2.getOrderId());
+        stockingService.pushMovement(orderO1212MERCHANTz2);
         stockingService.updateToRepository();
 
         ArrayList<String> orderIds = new ArrayList<String>();

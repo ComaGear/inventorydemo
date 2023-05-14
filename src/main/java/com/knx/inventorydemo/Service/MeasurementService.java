@@ -26,6 +26,7 @@ public class MeasurementService  {
 
     public boolean checkChannelExist(String channel) {
         List<ProductMeasurement> measList = productMeasurementMapper.getProductMeasListBySimilarRelativeId(channel, "%%" );
+        if(measList == null || measList.isEmpty()) return false;
         if(measList.get(0).getSalesChannel() == channel) return true;
         return false;
     }
@@ -52,12 +53,12 @@ public class MeasurementService  {
 
         // logger.info(measList.toString());
 
-        if(measList == null || measList.isEmpty()) {
-            if(this.checkChannelExist(channel)){
-                throw new IllegalArgumentException("channel is not exists");
-            }
-            throw new ResultMapException("have not relativeId's measurement exists");
-        }
+        // if(measList == null || measList.isEmpty()) {
+        //     if(this.checkChannelExist(channel)){
+        //         throw new IllegalArgumentException("channel is not exists");
+        //     }
+        //     throw new ResultMapException("have not relativeId's measurement exists");
+        // }
 
         HashMap<String, ProductMeasurement> measMap = new HashMap<String, ProductMeasurement>();
         for(ProductMeasurement meas : measList){
@@ -120,6 +121,7 @@ public class MeasurementService  {
         if(productId == null || productId.isEmpty()) throw new NullPointerException();
 
         List<String> list = new LinkedList<String>();
+        list.add(productId);
 
         return productMeasurementMapper.bulkRemoveMeasureByProductIds(list) > 0;
     }

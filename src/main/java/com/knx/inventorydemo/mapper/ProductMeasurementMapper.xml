@@ -66,6 +66,13 @@
         where relative_id like #{relativeId} and channel = #{channel}
     </select>
 
+    <delete id="bulkRemoveMeasureByProductIds" parameterType="java.util.List">
+        delete low_priority from product_measurement where product_id in
+        <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+    </delete>
+
     <insert id="measInit">
         create table if not exists product_measurement (
             product_id varchar(20),
@@ -79,12 +86,6 @@
         );
     </insert>
 
-    <delete id="bulkRemoveMeasureByProductIds">
-        delete LOW_PRIORITY product_measurement where product_id in
-        <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
-            #{productId}
-        </foreach>
-    </delete>
 <!-- 
     <select id="checkLayerExists" resultType="Integer" parameterType="String">
         select

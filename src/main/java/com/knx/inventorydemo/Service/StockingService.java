@@ -10,9 +10,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +28,8 @@ import com.knx.inventorydemo.exception.ProductUnactivityException;
 import com.knx.inventorydemo.mapper.ProductMovementMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
+import ch.qos.logback.core.joran.conditional.ElseAction;
+
 public class StockingService{
 
     private static final String ENSURE_STOCKING_MOVEMENTS = "Ensure Stocking Movements";
@@ -40,13 +42,14 @@ public class StockingService{
     private MeasurementService measurementService;
     private ProductService productService;
 
-    private BlockingQueue<ProductMovement> pendingMovements;
+    private Queue<ProductMovement> pendingMovements;
 
     public boolean updateToRepository(){
 
         if(pendingMovements.isEmpty()) return false;
         List<ProductMovement> beingMovements = new LinkedList<ProductMovement>();
-        pendingMovements.drainTo(beingMovements);
+        beingMovements.addAll(pendingMovements);
+        pendingMovements.clear();
 
         List<ProductMovement> ensureStockingMovements = new LinkedList<ProductMovement>();
         HashMap<String, Double> ensureStockingMap = new HashMap<String, Double>();
@@ -67,30 +70,35 @@ public class StockingService{
             }
         }
 
-        HashMap<String, Object> resultMap = this.stockMoveOutUpdateToRepository(beingMovements, moveOuts);
-        this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
-        List<ProductMovement> movesList = (List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS);
-        // ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
-        for(ProductMovement moves : movesList) {
-            if(moves instanceof StockMoveOut){
-                StockMoveOut moveOut = (StockMoveOut) moves;
-                moveOut.prepareStocking();
-            }
+        HashMap<String, Object> resultMap = null;
+        if(!moveOuts.isEmpty()){
+            resultMap = this.stockMoveOutUpdateToRepository(beingMovements, moveOuts);
+            this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
+            List<ProductMovement> movesList = (List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS);
+            // ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
+            // for(ProductMovement moves : movesList) {
+            //     if(moves instanceof StockMoveOut){
+            //         StockMoveOut moveOut = (StockMoveOut) moves;
+            //         moveOut.prepareStocking();
+            //     }
+            // }
+            ensureStockingMovements.addAll(movesList);
         }
-        ensureStockingMovements.addAll(movesList);
         
-        resultMap = this.stockMoveInUpdateToRepository(beingMovements, moveIns);
-        this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
-        ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
+        if(!moveIns.isEmpty()){
+            resultMap = this.stockMoveInUpdateToRepository(beingMovements, moveIns);
+            this.putWithAdding((Map<String, Double>) resultMap.get(ENSURE_STOCKING_MAP), ensureStockingMap);
+            ensureStockingMovements.addAll((List<ProductMovement>) resultMap.get(ENSURE_STOCKING_MOVEMENTS));
+        }
 
         // ensureStockingMovments turn stocking state and then put it to ensureStockingMap
         for(ProductMovement ensureMovement : ensureStockingMovements){
             if(ensureStockingMap.containsKey(ensureMovement.getRelativeId())){
                 Double stockDouble = ensureStockingMap.get(ensureMovement.getRelativeId());
-                stockDouble += ensureMovement.getQuantity();
+                stockDouble += Stocking.prepareStocking(ensureMovement);
                 ensureStockingMap.put(ensureMovement.getRelativeId(), stockDouble);
             } else {
-                ensureStockingMap.put(ensureMovement.getRelativeId(), ensureMovement.getQuantity());
+                ensureStockingMap.put(ensureMovement.getRelativeId(), Stocking.prepareStocking(ensureMovement));
             }
         }
 
@@ -180,18 +188,19 @@ public class StockingService{
             } else {
                 Order order = new Order().setOrderId(moveOut.getOrderId()).setChannel(moveOut.getSalesChannel())
                     .setDate(moveOut.getDate());
+                order.pushMovement(moveOut);
                 orderMap.put(moveOut.getOrderId(), order);
             }
         }
 
-        List<Order> orders = (List<Order>) orderMap.values();
+        List<Order> orders = new ArrayList<>(orderMap.values());
         return orders;
     }
 
     public List<StockInDocs> getDocsRecord(List<String> docsIds){
         if(docsIds == null || docsIds.isEmpty()) throw new NullPointerException();
 
-        List<StockMoveIn> productMovements = pMovementMapper.bulkGetMoveOutByDocsIds(docsIds);
+        List<StockMoveIn> productMovements = pMovementMapper.bulkGetMoveInByDocsIds(docsIds);
 
         Map<String, StockInDocs> docsMap = new HashMap<String, StockInDocs>();
 
@@ -204,11 +213,15 @@ public class StockingService{
             }
         }
 
-        List<StockInDocs> docsList = (List<StockInDocs>) docsMap.values();
+        List<StockInDocs> docsList = new ArrayList<>(docsMap.values());
         return docsList;
     }
 
     private HashMap<String, Object> stockMoveOutUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveOut> beingMoveOuts){
+
+        if(beingMovements == null || beingMovements.isEmpty()) return null;
+        if(beingMoveOuts == null || beingMoveOuts.isEmpty()) return null;
+
         List<String> uniqueOrderIds = new LinkedList<String>();
         List<StockMoveOut> ensureStockingMoveOuts = new LinkedList<>();
         Map<String, Double> ensureStockingMap = new HashMap<String, Double>(); // key by product relative id.
@@ -224,13 +237,16 @@ public class StockingService{
                 logger.debug(String.format("repository has not contains this moveOut's orderId by %s, relativeId is %s" ,
                      moveOut.getOrderId(), moveOut.getRelativeId()));
                 ensureStockingMoveOuts.add(moveOut);
-                beingMovements.remove(moveOut);
-                beingMoveOuts.remove(moveOut);
             }
         }
+        beingMoveOuts.removeAll(ensureStockingMoveOuts);
+        beingMovements.removeAll(ensureStockingMoveOuts);
 
-        
-        List<StockMoveOut> repositoryMoveOuts = new LinkedList<StockMoveOut>(); // get repository's order from mapper.
+        List<StockMoveOut> repositoryMoveOuts;
+        if(!existsOrderIds.isEmpty())
+            repositoryMoveOuts = pMovementMapper.bulkGetMoveOutByOrderIds(existsOrderIds); // get repository's order from mapper.
+        else
+            repositoryMoveOuts = new LinkedList<StockMoveOut>();
 
         // sorting StockMoveOut first priority by orderId, then second priority is product's relative id (productId + UOM).
         Comparator<StockMoveOut> comparator = new Comparator<StockMoveOut>() {
@@ -278,45 +294,44 @@ public class StockingService{
 
         // a list to be udpate repository's record of find has record before.
         List<StockMoveOut> toUpdateMoveOuts = new LinkedList<StockMoveOut>();
+        List<StockMoveOut> toRemoveRepositoryItem = new LinkedList<StockMoveOut>();
 
-        while(repositoryIterator.hasNext() || first){
+        while(repositoryIterator.hasNext() && beingIterator.hasNext() || first ){
             if(beingMoveOut == null || rMoveOut == null) return null;
             first = false;
             int compare =  beingMoveOut.compareTo(rMoveOut);
             
-            switch(compare){
-                case -1: // smallest than
-                    beingMoveOut = beingIterator.next();
-                    break;
-                case 1:
-                    rMoveOut = repositoryIterator.next();
-                    break;
-                case 0:
-                    double beingQuantity = beingMoveOut.getQuantity();
-                    double rQuantity = rMoveOut.getQuantity();
-                    double stocking = rQuantity - beingQuantity;
-                    String format = new DecimalFormat("#########.####").format(stocking);
-                    if(Double.valueOf(format) != 0.0000d){
-                        if(!ensureStockingMap.containsKey(beingMoveOut.getRelativeId()))
-                            ensureStockingMap.put(beingMoveOut.getRelativeId(), stocking);
-                        else {
-                            double double1 = ensureStockingMap.get(beingMoveOut.getRelativeId());
-                            double d = double1 + stocking;
-                            ensureStockingMap.put(beingMoveOut.getRelativeId(), d);
-                        }
-                        toUpdateMoveOuts.add(beingMoveOut);
+            if(compare < 0) // smallest than
+                beingMoveOut = beingIterator.next();
+            if(compare > 0)
+                rMoveOut = repositoryIterator.next();
+            if(compare == 0){
+                double beingQuantity = beingMoveOut.getQuantity();
+                double rQuantity = rMoveOut.getQuantity();
+                double stocking = rQuantity - beingQuantity;
+                String format = new DecimalFormat("#########.####").format(stocking);
+                if(Double.valueOf(format) != 0.0000d){
+                    if(!ensureStockingMap.containsKey(beingMoveOut.getRelativeId()))
+                        ensureStockingMap.put(beingMoveOut.getRelativeId(), stocking);
+                    else {
+                        double double1 = ensureStockingMap.get(beingMoveOut.getRelativeId());
+                        double d = double1 + stocking;
+                        ensureStockingMap.put(beingMoveOut.getRelativeId(), d);
                     }
+                    toUpdateMoveOuts.add(beingMoveOut);
+                }
 
-                    beingMoveOuts.remove(beingMoveOut);
-                    beingMovements.remove(beingMoveOut);
-                    repositoryMoveOuts.remove(rMoveOut);
-                    beingMoveOut = beingIterator.next();
-                    rMoveOut = repositoryIterator.next();
-
-                    break;
+                toRemoveRepositoryItem.add(rMoveOut);
+                if(beingIterator.hasNext()) beingMoveOut = beingIterator.next();
+                if(repositoryIterator.hasNext()) rMoveOut = repositoryIterator.next();
             }
         }
-        pMovementMapper.bulkUpdateMoveOut(toUpdateMoveOuts);
+        if(toUpdateMoveOuts != null && !toUpdateMoveOuts.isEmpty()){
+            pMovementMapper.bulkUpdateMoveOut(toUpdateMoveOuts);
+            beingMoveOuts.removeAll(toUpdateMoveOuts);
+            beingMovements.removeAll(toUpdateMoveOuts);
+            repositoryMoveOuts.removeAll(toRemoveRepositoryItem);
+        }
         
         // since any duplicate movements and updated movements is remove from both beingMoveOuts and repositoryMoveOuts.
         // iterate beingMoveOuts a new movement by orders. insert to repository movement and put it to ensureStockingMovements, remove
@@ -324,11 +339,13 @@ public class StockingService{
         List<StockMoveOut> newMoveOuts = new LinkedList<StockMoveOut>();
         for(StockMoveOut moveOut: beingMoveOuts){
             ensureStockingMoveOuts.add(moveOut);
-            beingMovements.remove(moveOut);
-            beingMoveOuts.remove(moveOut);
             newMoveOuts.add(moveOut);
         }
-        pMovementMapper.bulkInsertMoveOut(newMoveOuts);
+        if(!newMoveOuts.isEmpty()){
+            pMovementMapper.bulkInsertMoveOut(newMoveOuts);
+            beingMoveOuts.removeAll(newMoveOuts);
+            beingMovements.removeAll(newMoveOuts);
+        }
 
         // iterate repositoryMoveOuts remains toDelete movements. figure down quantity return to Stocking, putting return quantity
         //      ensureStockingList, remove from repositoryMoveOuts.
@@ -341,12 +358,17 @@ public class StockingService{
             } else
                 ensureStockingMap.put(moveOut.getRelativeId(), moveOut.getQuantity());
             
-            repositoryMoveOuts.remove(moveOut);
             toDeleteMoveOuts.add(moveOut);
         }
-        pMovementMapper.bulkRemoveMoveOuts(toDeleteMoveOuts);
+        if(!toDeleteMoveOuts.isEmpty()){
+            pMovementMapper.bulkRemoveMoveOuts(toDeleteMoveOuts);
+            repositoryMoveOuts.removeAll(toDeleteMoveOuts);
+        }
 
-        // finally step, return both ensureStockingMovements and ensureStockingList.=
+        if(!ensureStockingMoveOuts.isEmpty())
+            pMovementMapper.bulkInsertMoveOut(ensureStockingMoveOuts);
+        
+        // finally step, return both ensureStockingMovements and ensureStockingList.
         HashMap<String, Object> resultMap = new HashMap<String, Object>();
         resultMap.put(ENSURE_STOCKING_MAP, ensureStockingMap);
         resultMap.put(ENSURE_STOCKING_MOVEMENTS, ensureStockingMoveOuts);
@@ -354,6 +376,10 @@ public class StockingService{
     }
 
     private HashMap<String, Object> stockMoveInUpdateToRepository(List<ProductMovement> beingMovements, List<StockMoveIn> beingMoveIns){
+
+        if(beingMovements == null || beingMovements.isEmpty()) return null;
+        if(beingMoveIns == null || beingMoveIns.isEmpty()) return null;
+
         // similarly to stockMoveOutUpdateToRepository. but use MoveIn as parameter.
         List<String> uniqueDocsIds = new LinkedList<String>();
         List<StockMoveIn> ensureStockingMoveIns = new LinkedList<>();
@@ -363,18 +389,22 @@ public class StockingService{
             if(!uniqueDocsIds.contains(moveIn.getDocsId())) uniqueDocsIds.add(moveIn.getDocsId());
         }
 
-        List<String> existsOrderIds = pMovementMapper.getExistsDocsIds(uniqueDocsIds);
+        List<String> existsDocsIds = pMovementMapper.getExistsDocsIds(uniqueDocsIds);
         for(StockMoveIn moveIn : beingMoveIns){
-            if(!existsOrderIds.contains(moveIn.getDocsId())){
+            if(!existsDocsIds.contains(moveIn.getDocsId())){
                 logger.debug(String.format("repository has not contains this moveIn's docsId by %s, relativeId is %s" ,
-                     moveIn.getDocsId(), moveIn.getRelativeId()));
-                     ensureStockingMoveIns.add(moveIn);
-                beingMovements.remove(moveIn);
-                beingMoveIns.remove(moveIn);
+                moveIn.getDocsId(), moveIn.getRelativeId()));
+                ensureStockingMoveIns.add(moveIn);
             }
         }
+        beingMoveIns.removeAll(ensureStockingMoveIns);
+        beingMovements.removeAll(ensureStockingMoveIns);
 
-        List<StockMoveIn> repositoryMoveIns = new LinkedList<StockMoveIn>(); // get repository's order from mapper.
+        List<StockMoveIn> repositoryMoveIns;
+        if(!existsDocsIds.isEmpty())
+            repositoryMoveIns = pMovementMapper.bulkGetMoveInByDocsIds(existsDocsIds); // get repository's order from mapper.
+        else
+            repositoryMoveIns = new LinkedList<StockMoveIn>();
 
         // sorting StockMoveOut first priority by orderId, then second priority is product's relative id (productId + UOM).
         Comparator<StockMoveIn> comparator = new Comparator<StockMoveIn>() {
@@ -420,70 +450,75 @@ public class StockingService{
         }
 
         List<StockMoveIn> toUpdateMoveIns = new LinkedList<StockMoveIn>();
+        LinkedList<StockMoveIn> toRemoveRepositoryItem = new LinkedList<StockMoveIn>();
 
-        while(repositoryIterator.hasNext() || first){
+        while(repositoryIterator.hasNext() && beingIterator.hasNext() || first){
             if(beingMoveIn == null || rMoveIn == null) return null;
             first = false;
             int compare =  beingMoveIn.compareTo(rMoveIn);
             
-            switch(compare){
-                case -1: // smallest than
-                    beingMoveIn = beingIterator.next();
-                    break;
-                case 1:
-                    rMoveIn = repositoryIterator.next();
-                    break;
-                case 0:
-                    double beingQuantity = beingMoveIn.getQuantity();
-                    double rQuantity = rMoveIn.getQuantity();
-                    double stocking = rQuantity - beingQuantity;
-                    String format = new DecimalFormat("#########.####").format(stocking);
-                    if(Double.valueOf(format) != 0.0000d){
-                        if(!ensureStockingMap.containsKey(beingMoveIn.getRelativeId()))
-                            ensureStockingMap.put(beingMoveIn.getRelativeId(), stocking);
-                        else {
-                            double double1 = ensureStockingMap.get(beingMoveIn.getRelativeId());
-                            double d = double1 + stocking;
-                            ensureStockingMap.put(beingMoveIn.getRelativeId(), d);
-                        }
-                        toUpdateMoveIns.add(beingMoveIn);
+            if(compare < 0) // smallest than
+                beingMoveIn = beingIterator.next();
+            if(compare > 0)
+                rMoveIn = repositoryIterator.next();
+            if(compare == 0){
+                double beingQuantity = beingMoveIn.getQuantity();
+                double rQuantity = rMoveIn.getQuantity();
+                double stocking = rQuantity - beingQuantity;
+                String format = new DecimalFormat("#########.####").format(stocking);
+                if(Double.valueOf(format) != 0.0000d){
+                    if(!ensureStockingMap.containsKey(beingMoveIn.getRelativeId()))
+                        ensureStockingMap.put(beingMoveIn.getRelativeId(), stocking);
+                    else {
+                        double double1 = ensureStockingMap.get(beingMoveIn.getRelativeId());
+                        double d = double1 + stocking;
+                        ensureStockingMap.put(beingMoveIn.getRelativeId(), d);
                     }
+                    toUpdateMoveIns.add(beingMoveIn);
+                }
 
-                    beingMoveIns.remove(beingMoveIn);
-                    beingMovements.remove(beingMoveIn);
-                    repositoryMoveIns.remove(rMoveIn);
-                    beingMoveIn = beingIterator.next();
-                    rMoveIn = repositoryIterator.next();
-
-                    break;
+                toRemoveRepositoryItem.add(rMoveIn);
+                beingMoveIn = beingIterator.next();
+                rMoveIn = repositoryIterator.next();
             }
         }
-        pMovementMapper.bulkUpdateMoveIn(toUpdateMoveIns);
+        if(!toUpdateMoveIns.isEmpty()){
+            pMovementMapper.bulkUpdateMoveIn(toUpdateMoveIns);
+            beingMoveIns.removeAll(toUpdateMoveIns);
+            beingMovements.removeAll(toUpdateMoveIns);
+            repositoryMoveIns.removeAll(toRemoveRepositoryItem);
+        }
 
 
-        List<StockMoveIn> newMoveOuts = new LinkedList<StockMoveIn>();
+        List<StockMoveIn> newMoveIns = new LinkedList<StockMoveIn>();
         for(StockMoveIn moveIn: beingMoveIns){
             ensureStockingMoveIns.add(moveIn);
-            beingMovements.remove(moveIn);
-            beingMoveIns.remove(moveIn);
-            newMoveOuts.add(moveIn);
+            newMoveIns.add(moveIn);
         }
-        pMovementMapper.bulkInsertMoveIn(newMoveOuts);
+        if(!newMoveIns.isEmpty()){
+            pMovementMapper.bulkInsertMoveIn(newMoveIns);
+            beingMoveIns.removeAll(newMoveIns);
+            beingMovements.removeAll(newMoveIns);
+        }
 
 
         List<StockMoveIn> toDeleteMoveIns = new LinkedList<StockMoveIn>();
-        for(StockMoveIn moveOut : repositoryMoveIns){
-            if(ensureStockingMap.containsKey(moveOut.getRelativeId())){
-                Double double1 = ensureStockingMap.get(moveOut.getRelativeId());
-                double1 += moveOut.getQuantity();
-                ensureStockingMap.put(moveOut.getRelativeId(), double1);
+        for(StockMoveIn moveIn : repositoryMoveIns){
+            if(ensureStockingMap.containsKey(moveIn.getRelativeId())){
+                Double double1 = ensureStockingMap.get(moveIn.getRelativeId());
+                double1 += moveIn.getQuantity();
+                ensureStockingMap.put(moveIn.getRelativeId(), double1);
             } else
-                ensureStockingMap.put(moveOut.getRelativeId(), moveOut.getQuantity());
+                ensureStockingMap.put(moveIn.getRelativeId(), moveIn.getQuantity());
             
-            repositoryMoveIns.remove(moveOut);
-            toDeleteMoveIns.add(moveOut);
+            toDeleteMoveIns.add(moveIn);
         }
-        pMovementMapper.bulkRemoveMoveIns(toDeleteMoveIns);
+        if(!toDeleteMoveIns.isEmpty()){
+            pMovementMapper.bulkRemoveMoveIns(toDeleteMoveIns);
+        }
+
+        if(!ensureStockingMoveIns.isEmpty())
+            pMovementMapper.bulkInsertMoveIn(ensureStockingMoveIns);
 
         HashMap<String, Object> resultMap = new HashMap<String, Object>();
         resultMap.put(ENSURE_STOCKING_MAP, ensureStockingMap);
@@ -740,35 +775,35 @@ public class StockingService{
      * @param movements List of ProductMovement
      * @return Map key by sales channel, value is Map contains Measurement key by measurement's relative id such as "9968-unit", Map<SalesChannel, Map<RelativeId, ProductMeasurement>>
      */
-    public HashMap<String, Map<String, ProductMeasurement>> pullOriginMeasurement(List<ProductMovement> movements){
+    // public HashMap<String, Map<String, ProductMeasurement>> pullOriginMeasurement(List<ProductMovement> movements){
 
-        if(movements == null || movements.isEmpty()) throw new NullPointerException("movements is null or empty");
+    //     if(movements == null || movements.isEmpty()) throw new NullPointerException("movements is null or empty");
 
-        HashMap<String, List<String>> channelMovementMap = new HashMap<String, List<String>>();
-        Set<String> channelKeySet = channelMovementMap.keySet();
-        HashMap<String, Map<String, ProductMeasurement>> resultMovementMap = new HashMap<String, Map<String, ProductMeasurement>>();
+    //     HashMap<String, List<String>> channelMovementMap = new HashMap<String, List<String>>();
+    //     Set<String> channelKeySet = channelMovementMap.keySet();
+    //     HashMap<String, Map<String, ProductMeasurement>> resultMovementMap = new HashMap<String, Map<String, ProductMeasurement>>();
 
-        for(ProductMovement movement : movements){
-            if(!channelKeySet.contains(movement.getSalesChannel())){
-                channelMovementMap.put(movement.getSalesChannel(), new ArrayList<String>());
-            }
+    //     for(ProductMovement movement : movements){
+    //         if(!channelKeySet.contains(movement.getSalesChannel())){
+    //             channelMovementMap.put(movement.getSalesChannel(), new ArrayList<String>());
+    //         }
 
-            List<String> relativeIds = channelMovementMap.get(movement.getSalesChannel());
-            if(!relativeIds.contains(movement.getRelativeId())){
-                String relativeId = movement.getRelativeId();
-                if(!relativeId.contains("-")) relativeId = relativeId + "-" + movement.getUsedUOM();
-                relativeIds.add(relativeId);
-            }
-        }
+    //         List<String> relativeIds = channelMovementMap.get(movement.getSalesChannel());
+    //         if(!relativeIds.contains(movement.getRelativeId())){
+    //             String relativeId = movement.getRelativeId();
+    //             if(!relativeId.contains("-")) relativeId = relativeId + "-" + movement.getUsedUOM();
+    //             relativeIds.add(relativeId);
+    //         }
+    //     }
 
-        for(String salesChannel : channelKeySet){
-            List<String> relativeIds = channelMovementMap.get(salesChannel);
-            Map<String, ProductMeasurement> resultMap = measurementService.getProductMeasByRelativeIdWithChannel(relativeIds, salesChannel);
-            resultMovementMap.put(salesChannel, resultMap);
-        }
+    //     for(String salesChannel : channelKeySet){
+    //         List<String> relativeIds = channelMovementMap.get(salesChannel);
+    //         Map<String, ProductMeasurement> resultMap = measurementService.getProductMeasByRelativeIdWithChannel(relativeIds, salesChannel);
+    //         resultMovementMap.put(salesChannel, resultMap);
+    //     }
 
-        return resultMovementMap;
-    }
+    //     return resultMovementMap;
+    // }
 
     public Map<String, ProductMeasurement> pullOriginMeasurementByRelativeIds(List<String> relativeIds){
         Map<String, ProductMeasurement> productMeasByRelativeIds = measurementService.getProductMeasByRelativeIds(relativeIds);
@@ -780,6 +815,8 @@ public class StockingService{
     }
 
 	public void creatingNewStocking(String id) {
+
+        if(id == null || id.isEmpty()) throw new NullPointerException("id is null");
         
         List<String> list = new LinkedList<String>();
         list.add(id);
@@ -804,7 +841,7 @@ public class StockingService{
     }
     
     public StockingService(){
-        pendingMovements = new PriorityBlockingQueue<>();
+        pendingMovements = new LinkedList<ProductMovement>();
     }
 
     public StockingService(ProductStockingMapper productStockingMapper, ProductMovementMapper productMovementMapper, MeasurementService measurementService, ProductService productService){
@@ -812,7 +849,7 @@ public class StockingService{
         this.pMovementMapper = productMovementMapper;
         this.pStockingMapper = productStockingMapper;
         this.productService = productService;
-        this.pendingMovements = new PriorityBlockingQueue<>();
+        this.pendingMovements = new LinkedList<ProductMovement>();
     }
 
 }

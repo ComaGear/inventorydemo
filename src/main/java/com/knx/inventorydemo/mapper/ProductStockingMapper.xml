@@ -25,11 +25,11 @@
     </insert>
 
     <update id="updateStockingOnHold" parameterType="com.knx.inventorydemo.entity.Stocking">
-        <foreach collection="stockings" item="stocking" index="index">
+        <foreach collection="stockings" item="stocking" index="index" separator=";">
         update product_stocking as o
-        inner join (select product_id, stocking_on_hold from product_stocking where product_id = #{stocking.productId}) as a
+        inner join (select product_id, stocking_on_hold from product_stocking where product_id = ${stocking.productId}) as a
             on o.product_id = A.product_id
-        set o.stocking_on_hold = a.stocking_on_hold + #{stocking.quantity};
+        set o.stocking_on_hold = a.stocking_on_hold + #{stocking.quantity}
         </foreach>
     </update>
 
@@ -41,7 +41,7 @@
     </delete>
 
     <insert id="init">
-        create table inventorydemo.product_stocking (
+        create table if not exists inventorydemo.product_stocking (
             product_id varchar(20),
             stocking_available double,
             stocking_on_hold double,

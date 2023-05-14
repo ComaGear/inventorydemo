@@ -36,10 +36,11 @@
     
     <insert id="bulkInsertMoveOut" parameterType="java.util.List">
         insert into product_movement 
-            (relative_id, product_id, update_date, quantity, used_uom, channel)
+            (relative_id, product_id, update_date, quantity, used_uom, channel, order_id)
         values
         <foreach collection="moveOuts" item="moveOut" index="index" open="" separator="," close="">
-            (#{moveOut.relativeId}, #{moveOut.productId}, #{moveOut.date}, #{moveOut.quantity}, #{moveOut.usedUOM}, #{moveOut.salesChannel})
+            (#{moveOut.relativeId}, #{moveOut.productId}, #{moveOut.date}, #{moveOut.quantity}, #{moveOut.usedUOM}, #{moveOut.salesChannel}
+            , #{moveOut.orderId})
         </foreach>
     </insert>
 
@@ -141,15 +142,15 @@
         </foreach>
     </select>
 
-    <select id="getExistsOrderIds">
-        select distinct(order_id) from product_movement where in
+    <select id="getExistsOrderIds" resultType="java.lang.String">
+        select distinct(order_id) from product_movement where order_id in
         <foreach collection="orderIds" open="(" close=")" separator="," item="orderId">
             #{orderId}
         </foreach>
     </select>
 
-    <select id="getExistsDocsIds">
-        select distinct(docsId) from product_movement where in
+    <select id="getExistsDocsIds" resultType="java.lang.String">
+        select distinct(docs_id) from product_movement where docs_id in
         <foreach collection="docsIds" item="docsId" open="(" separator="," close=")">
             #{docsId}
         </foreach>
@@ -205,9 +206,9 @@
         </foreach>
     </delete> -->
 
-    <delete id="bulkRemoveMoveOuts">
-        delete LOW_PRIORITY product_movement where relative_id in
-        <foreach collection="toDeleteMoveOuts" item="moveOut" open="(" close=")" separator=",">
+    <delete id="bulkRemoveMoveOuts" parameterType="java.util.List">
+        delete LOW_PRIORITY from product_movement where relative_id in
+        <foreach collection="toDeleteMoveOuts" item="moveOut" open="(" close=")" separator="," >
             #{moveOut.relativeId}
         </foreach>
         and order_id in
@@ -216,8 +217,8 @@
         </foreach>
     </delete>
 
-    <delete id="bulkRemoveMoveIns">
-        delete LOW_PRIORITY product_movement where row_of_item in
+    <delete id="bulkRemoveMoveIns" parameterType="java.util.List">
+        delete LOW_PRIORITY from product_movement where row_of_item in
         <foreach collection="toDeleteMoveIns" item="moveIn" open="(" close=")" separator=",">
             #{moveIn.itemRowOfDocs}
         </foreach>

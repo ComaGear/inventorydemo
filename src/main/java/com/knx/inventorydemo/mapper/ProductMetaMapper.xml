@@ -3,6 +3,9 @@
 <mapper namespace="com.knx.inventorydemo.mapper.ProductMetaMapper">
 
   <resultMap id="ProductMetaM" type="ProductMeta">
+  <!-- <constructor>
+    <arg column="id" name=""/>
+  </constructor> -->
     <id property="id" column="id"/>
     <result property="name" column="name"/>
     <result property="defaultUom" column="default_uom"/>
@@ -13,8 +16,8 @@
   </resultMap>
 
   <insert id="addNewProduct" parameterType="ProductMeta"
-    keyProperty="id"> insert into product_meta (id, name, vendor_name, default_uom) values (#{id},
-    #{name}, #{vendor.name}, #{defaultUom}); </insert>
+    keyProperty="id"> insert into product_meta (id, name, vendor_name, default_uom, activity) values (#{id},
+    #{name}, #{vendor.name}, #{defaultUom}, #{activity}) </insert>
 
   <select id="getProductById" resultMap="ProductMetaM">
     select id, name, vendor_name, default_uom, activity from product_meta where id = #{id}
@@ -25,7 +28,7 @@
   </select>
 
   <delete id="deleteProductMetaById">
-    delete * where id = #{id}
+    delete LOW_PRIORITY from product_meta where id = #{id}
   </delete>
 
   <update id="update" parameterType="ProductMeta">
@@ -53,9 +56,9 @@
     where id = #{id}
   </select>
 
-  <select id="bulkCheckUnactivityById">
+  <select id="bulkCheckUnactivityById" resultType="java.lang.String">
     select id from product_meta
-    where activity = false and id in
+    where activity = 0 and id in
     <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
       #{productId}
     </foreach>

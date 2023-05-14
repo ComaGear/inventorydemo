@@ -42,7 +42,7 @@ public class StockMoveOut extends ProductMovement implements Comparable<StockMov
         if(oMoveOut == null || oMoveOut.getOrderId().isEmpty()) return -1;
         if(this == null || this.getOrderId().isEmpty()) return 1;
 
-        if(this.getOrderId().compareTo(oMoveOut.getOrderId()) == 0){
+        if(this.getOrderId().compareToIgnoreCase(oMoveOut.getOrderId()) == 0){
 
             String o1RelativeId = null;
             if(this.getRelativeId() == null || this.getRelativeId().isEmpty()) // || !this.getRelativeId().contains("-")
@@ -54,10 +54,10 @@ public class StockMoveOut extends ProductMovement implements Comparable<StockMov
                 o2RelativeId = oMoveOut.getProductId() + "-" + oMoveOut.getUsedUOM();
             else o2RelativeId = oMoveOut.getRelativeId();
 
-            return o1RelativeId.compareTo(o2RelativeId);
+            return o1RelativeId.compareToIgnoreCase(o2RelativeId);
         }
 
-        return this.getOrderId().compareTo(oMoveOut.getOrderId());
+        return this.getOrderId().compareToIgnoreCase(oMoveOut.getOrderId());
     }
 
     public void prepareStocking() {

@@ -28,4 +28,23 @@ public class Stocking{
         this.productId = productId;
         this.quantity = quantity;
     }
+
+    /**
+     * Qauntity of sell out and trade in by StockMoveIn and StockMoveOut was not suitable for calculate directly by Stock stocking behave.
+     * before update the stock, use this static method turn to stocking behave.
+     * 
+     * @param {@code}moves instance of ProductMovement refered
+     * @return a Double of quantity updating to stock.
+     */
+    public static double prepareStocking(ProductMovement moves){
+        if(moves instanceof StockMoveOut){
+            StockMoveOut moveOut = (StockMoveOut) moves;
+            return 0 - moveOut.getQuantity();
+        }
+        if(moves instanceof StockMoveIn){
+            StockMoveIn moveIn = (StockMoveIn) moves;
+            return moveIn.getQuantity();
+        }
+        return moves.getQuantity();
+    }
 }

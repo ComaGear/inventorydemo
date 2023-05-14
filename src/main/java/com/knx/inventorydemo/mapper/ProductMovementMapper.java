@@ -19,21 +19,19 @@ public interface ProductMovementMapper {
 
     public int bulkUpdateMoveOut(List<StockMoveOut> moveOuts);
 
-    public Set<ProductMovement> bulkGetMoveIn(List<String> relativeIds);
+    public Set<StockMoveIn> bulkGetMoveIn(List<String> relativeIds);
 
-    public Set<ProductMovement> bulkGetMoveOut(List<String> relativeIds);
+    public Set<StockMoveOut> bulkGetMoveOut(List<String> relativeIds);
 
-    public Set<ProductMovement> bulkGetMoveInByProductId(List<String> productIds);
+    public Set<StockMoveIn> bulkGetMoveInByProductId(List<String> productIds);
 
-    public Set<ProductMovement> bulkGetMoveOutByProductId(List<String> productIds);
+    public Set<StockMoveOut> bulkGetMoveOutByProductId(List<String> productIds);
 
     public List<ProductMovement> bulkGetMoveOutByOrderIdsAndProductIds(List<StockMoveOut> movements);
 
     public List<StockMoveOut> bulkGetMoveOutByOrderIds(List<String> orderIds);
 
-    public List<StockMoveIn> bulkGetMoveOutByDocsIds(List<String> docsIds);
-
-    public List<ProductMovement> bulkGetMoveInByDocsIds(List<String> docsIds);
+    public List<StockMoveIn> bulkGetMoveInByDocsIds(List<String> docsIds);
 
     public List<String> getExistsOrderIds(List<String> orderIds);
 

@@ -55,7 +55,7 @@ public class ProductService {
      */
     public void addNewProduct(ProductMeta productMeta){
         addNewProduct(productMeta, new ProductUOM()
-            .setRelativeId("")
+            .setRelativeId(productMeta.getId() + "-" + "UNIT")
             .setMeasurement(1f)
             .setUOM_name("UNIT")
             .setProductId(productMeta.getId()

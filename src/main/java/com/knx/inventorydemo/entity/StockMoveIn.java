@@ -33,7 +33,7 @@ public class StockMoveIn extends ProductMovement implements Comparable<StockMove
         if(oMoveIn.getDocsId() == null || oMoveIn.getDocsId().isEmpty()) return -1;
         if(this.getDocsId() == null || this.getDocsId().isEmpty()) return 1;
 
-        if(oMoveIn.getDocsId().compareTo(this.getDocsId()) == 0){
+        if(oMoveIn.getDocsId().compareToIgnoreCase(this.getDocsId()) == 0){
             if(oMoveIn.getItemRowOfDocs() == this.getItemRowOfDocs())
                 return 0;
             else

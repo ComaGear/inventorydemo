@@ -53,12 +53,18 @@ public class Order {
         return this;
     }
 
-    public void removeMovementByRelativeId(String relativeId){
-        if(this.productMovements == null || this.hasMovement() == false) return;
+    public boolean removeMovementByRelativeId(String relativeId){
+        if(this.productMovements == null || this.hasMovement() == false) return false;
 
+        StockMoveOut foundMoveOut = null;
         for(StockMoveOut moveOut : this.getMovements()){
-            if(moveOut.getRelativeId() == relativeId) this.productMovements.remove(moveOut);
+            if(moveOut.getRelativeId() == relativeId) foundMoveOut = moveOut;
         }
+        if(foundMoveOut != null) {
+            this.productMovements.remove(foundMoveOut);
+            return true;
+        }
+        return false;
     }
 
     public ArrayList<StockMoveOut> getMovements(){
