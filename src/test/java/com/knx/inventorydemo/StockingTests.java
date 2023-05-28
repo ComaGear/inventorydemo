@@ -1,14 +1,12 @@
 package com.knx.inventorydemo;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.contains;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.logging.log4j.util.MessageSupplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -22,7 +20,6 @@ import com.knx.inventorydemo.Service.StockingService;
 import com.knx.inventorydemo.entity.Order;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
-import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.StockInDocs;
 import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;

@@ -2,7 +2,6 @@ package com.knx.inventorydemo.Service;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +25,6 @@ import com.knx.inventorydemo.entity.Stocking;
 import com.knx.inventorydemo.exception.ProductUnactivityException;
 import com.knx.inventorydemo.mapper.ProductMovementMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
-
-import ch.qos.logback.core.joran.conditional.ElseAction;
 
 public class StockingService{
 
