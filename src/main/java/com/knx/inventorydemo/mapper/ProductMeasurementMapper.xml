@@ -38,19 +38,19 @@
     </update>
 
     <select id="getProductMeasByProductIdWithChannel" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{channel} as channel, barcode
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, channel, barcode
         from product_measurement
         where product_id = #{productId} and channel = #{channel}
     </select>
 
     <select id="getProductMeasByRelativeIdWithChannel" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id,  <if test="#{channel} != null">#{channel} as channel,</if> barcode
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, channel, barcode
         from product_measurement
-        where relative_id = #{relativeId} <if test="#{channel} != null">and channel = #{channel}</if>
+        where relative_id = #{relativeId} and channel = #{channel}
     </select>
 
     <select id="bulkGetProductMeasByRelativeIdwithChannel" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{channel} as channel, barcode
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, channel, barcode
         from product_measurement
         <where>
             <foreach collection="relativeIds" item="relativeId"
@@ -61,7 +61,7 @@
     </select>
 
     <select id="getProductMeasListBySimilarRelativeId" resultMap="ProductMeas">
-        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, #{channel} as channel, barcode
+        select relative_id, product_id, measurement, uom_name, layer_update_rule_id, channel, barcode
         from product_measurement
         where relative_id like #{relativeId} and channel = #{channel}
     </select>
