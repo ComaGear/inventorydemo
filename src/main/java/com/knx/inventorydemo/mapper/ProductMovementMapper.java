@@ -19,13 +19,13 @@ public interface ProductMovementMapper {
 
     public int bulkUpdateMoveOut(List<StockMoveOut> moveOuts);
 
-    public Set<StockMoveIn> bulkGetMoveIn(List<String> relativeIds);
+    public List<StockMoveIn> bulkGetMoveIn(List<String> relativeIds);
 
-    public Set<StockMoveOut> bulkGetMoveOut(List<String> relativeIds);
+    public List<StockMoveOut> bulkGetMoveOut(List<String> relativeIds);
 
-    public Set<StockMoveIn> bulkGetMoveInByProductId(List<String> productIds);
+    public List<StockMoveIn> bulkGetMoveInByProductId(List<String> productIds);
 
-    public Set<StockMoveOut> bulkGetMoveOutByProductId(List<String> productIds);
+    public List<StockMoveOut> bulkGetMoveOutByProductId(List<String> productIds);
 
     public List<ProductMovement> bulkGetMoveOutByOrderIdsAndProductIds(List<StockMoveOut> movements);
 
@@ -42,13 +42,13 @@ public interface ProductMovementMapper {
      */
     public List<Order> bulkGetRecordSizeOfOrderByOrderId(List<String> orderIds);
 
-    public Set<ProductMovement> bulkGetMoveInByProductIdInDate(List<String> productIds, Date startDate, Date endDate);
+    public List<ProductMovement> bulkGetMoveInByProductIdInDate(List<String> productIds, Date startDate, Date endDate);
 
-    public Set<ProductMovement> bulkGetMoveOutByProductIdInDate(List<String> productIds, Date startDate, Date endDate);
+    public List<ProductMovement> bulkGetMoveOutByProductIdInDate(List<String> productIds, Date startDate, Date endDate);
 
-    public Set<ProductMovement> bulkGetMoveInSpecifyDate(Date startDate, Date endDate);
+    public List<ProductMovement> bulkGetMoveInSpecifyDate(Date startDate, Date endDate);
 
-    public Set<ProductMovement> bulkGetMoveOutSpecifyDate(Date startDate, Date endDate);
+    public List<ProductMovement> bulkGetMoveOutSpecifyDate(Date startDate, Date endDate);
 
     public int bulkRemoveMoveOuts(List<StockMoveOut> toDeleteMoveOuts);
 
