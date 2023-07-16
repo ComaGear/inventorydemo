@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import com.knx.inventorydemo.Service.MeasurementService;
 import com.knx.inventorydemo.Service.ProductService;
+import com.knx.inventorydemo.Service.StockMovementService;
 import com.knx.inventorydemo.Service.StockingService;
 import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
@@ -103,6 +104,14 @@ public class InventorydemoApplication {
 			productService.setStockingService(stockingService);
 			return stockingService;
 		}
+
+
+	// TODO: add a bean of stockMovementService
+	@Bean
+	public StockMovementService stockMovementService(@Autowired ProductMovementMapper productMovementMapper){
+		StockMovementService stockMovementService = new StockMovementService(productMovementMapper);
+		return stockMovementService;
+	}
 
 	// TODO: base init of ProductUOM's Update Rule
 }

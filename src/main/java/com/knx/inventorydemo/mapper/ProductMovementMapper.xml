@@ -173,7 +173,8 @@
         <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
             #{productId}
         </foreach>
-        and update_date &gt; #{startDate} and update_date &lt; #{endDate}
+        and docs_id is not null
+        and update_date between #{startDate} and #{endDate}
     </select>
 
     <select id="bulkGetMoveOutByProductIdInDate" resultMap="MoveOutMap">
@@ -182,17 +183,38 @@
         <foreach collection="productIds" index="index" item="productId" open="(" close=")" separator=",">
             #{productId}
         </foreach>
-        and update_date &gt; #{startDate} and update_date &lt; #{endDate}
+        and order_id is not null
+        and update_date between #{startDate} and #{endDate}
+    </select>
+
+    <select id="bulkGetMoveInInDate" resultMap="MoveInMap">
+        select * from product_movement
+        where relative_id in
+        <foreach collection="relativeIds" index="index" item="relativeId" open="(" close=")" separator=",">
+            #{relativeId}
+        </foreach>
+        and docs_id is not null
+        and update_date between #{startDate} and #{endDate} 
+    </select>
+
+    <select id="bulkGetMoveOutInDate" resultMap="MoveInMap">
+        select * from product_movement
+        where relative_id in
+        <foreach collection="relativeIds" index="index" item="relativeId" open="(" close=")" separator=",">
+            #{relativeId}
+        </foreach>
+        and order_id is not null
+        and update_date between #{startDate} and #{endDate}
     </select>
 
     <select id="bulkGetMoveInSpecifyDate" resultMap="MoveInMap">
         select * from product_movement
-        where update_date &gt; #{startDate} and update_date &lt; #{endDate}
+        where docs_id is not null and update_date between #{startDate} and #{endDate}
     </select>
 
     <select id="bulkGetMoveOutSpecifyDate" resultMap="MoveOutMap">
         select * from product_movement
-        where update_date &gt; #{startDate} and update_date &lt; #{endDate}
+        where order_id is not null and update_date between #{startDate} and #{endDate}
     </select>
 
     <!-- <delete id="bulkDeleteMovements" parameterType="java.util.List">

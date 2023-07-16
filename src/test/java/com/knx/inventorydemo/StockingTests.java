@@ -2,8 +2,12 @@ package com.knx.inventorydemo;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,10 +20,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.knx.inventorydemo.Service.MeasurementService;
 import com.knx.inventorydemo.Service.ProductService;
+import com.knx.inventorydemo.Service.StockMovementService;
 import com.knx.inventorydemo.Service.StockingService;
 import com.knx.inventorydemo.entity.Order;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
+import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.StockInDocs;
 import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;
@@ -34,6 +40,8 @@ public class StockingTests {
     MeasurementService measurementService;
     @Autowired
     StockingService stockingService;
+    @Autowired
+    StockMovementService stockMovementService;
     
     private ProductMeta productMeta9971;
     private ProductMeta productMeta1121;
@@ -234,6 +242,59 @@ public class StockingTests {
             if(exists == false) exists = moveOut.getRelativeId().equals(moveOut9971CTNby1.getRelativeId());
         }
         assertFalse(notExist, "a order has removed moveOut then updating repository also removed.");
+    }
+
+    @Test
+    public void gettingMoveOutAndMoveInWithDateCondition(){
+
+        String id = productMeta9971.getId();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(orderO1133MERCHANTz1.getDate());
+
+        calendar.add(Calendar.DATE, -5);
+        Date startDate = calendar.getTime();
+ 
+        calendar.add(Calendar.DATE, 10);
+        Date endDate = calendar.getTime();
+
+        LinkedList<String> moveIdList = new LinkedList<String>();
+        moveIdList.add(id);
+        List<ProductMovement> allMoveByProductId = stockMovementService.allMoveByProductId(moveIdList, startDate, endDate);
+
+        String productId = allMoveByProductId.get(0).getProductId();
+        assertEquals(id, productId);
+    }
+
+    @Test
+    public void receiveMoveOutOnly(){
+        String id = productMeta9971.getId();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(orderO1133MERCHANTz1.getDate());
+
+        calendar.add(Calendar.DATE, -5);
+        Date startDate = calendar.getTime();
+ 
+        calendar.add(Calendar.DATE, 10);
+        Date endDate = calendar.getTime();
+
+        LinkedList<String> moveIdList = new LinkedList<String>();
+        moveIdList.add(id);
+        List<ProductMovement> allMoveOutByProductIds = stockMovementService.allMoveOutByProductIds(moveIdList, startDate, endDate);
+
+        Iterator<ProductMovement> iterator = allMoveOutByProductIds.iterator();
+        boolean isAllMoveOut = true;
+        while(iterator.hasNext()){
+            ProductMovement next = iterator.next();
+            if(next instanceof StockMoveOut){
+                StockMoveOut moveOut = (StockMoveOut) next;
+                if(moveOut.getOrderId() == null) isAllMoveOut = false;
+            } else {
+                isAllMoveOut = false;
+            }
+        }
+        assertTrue(isAllMoveOut);
     }
 
     @Test
