@@ -2,8 +2,6 @@ package com.knx.inventorydemo;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;

@@ -105,8 +105,6 @@ public class InventorydemoApplication {
 			return stockingService;
 		}
 
-
-	// TODO: add a bean of stockMovementService
 	@Bean
 	public StockMovementService stockMovementService(@Autowired ProductMovementMapper productMovementMapper){
 		StockMovementService stockMovementService = new StockMovementService(productMovementMapper);

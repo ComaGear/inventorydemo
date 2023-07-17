@@ -15,6 +15,10 @@
     </association>
   </resultMap>
 
+  <!-- <resultMap id="productIds" type="java.land.String">
+    <result />
+  </resultMap> -->
+
   <insert id="addNewProduct" parameterType="ProductMeta"
     keyProperty="id"> insert into product_meta (id, name, vendor_name, default_uom, activity) values (#{id},
     #{name}, #{vendor.name}, #{defaultUom}, #{activity}) </insert>
@@ -63,6 +67,29 @@
       #{productId}
     </foreach>
   </select>
+
+
+  <insert id="prepareForUnexistProductIds">
+    create temporary table if not exists to_obtains_unexist_product
+    ( id varchar(20) not null );
+  </insert>
+
+  <insert id="insertToCheckExistProductIds" parameterType="java.util.List">
+    insert into to_obtains_unexist_product (id)
+    values
+    <foreach collection="productIds" index="index" item="productId">
+      (#{productId})
+    </foreach>
+  </insert>
+
+  <select id="getUnexistProductIds" resultType="java.lang.String">
+    select id from to_obtains_unexist_product
+    where not exists (select id from product_meta where product_meta.id = to_obtains_unexist_product.id);
+  </select>
+
+  <delete id="endOfGetUnexistProductIds">
+    delete from to_obtains_unexist_product;
+  </delete>
 
   <select id="getAll" resultMap="ProductMetaM"> select * from
     product_meta; </select>

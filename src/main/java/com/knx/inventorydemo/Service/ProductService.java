@@ -119,6 +119,17 @@ public class ProductService {
         return productMetaMapper.getProductByStr(stringBuilder.toString());
     }
 
+    public List<String> lookupUnexistProduct(List<String> productIds){
+        
+        productMetaMapper.prepareForUnexistProductIds();
+        productMetaMapper.insertToCheckExistProductIds(productIds);
+        List<String> unexistProductIds = productMetaMapper.getUnexistProductIds();
+
+        productMetaMapper.endOfGetUnexistProductIds();
+
+        return unexistProductIds;
+    }
+
     /**
      * initialized database
      */
