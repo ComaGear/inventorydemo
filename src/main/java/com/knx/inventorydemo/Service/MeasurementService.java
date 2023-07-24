@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
+import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.ProductUOM;
 import com.knx.inventorydemo.mapper.ProductMeasurementMapper;
 
@@ -241,6 +242,11 @@ public class MeasurementService  {
 
     private void updateByRelativeId(ProductMeasurement productMeas) {
         productMeasurementMapper.updateMeasureTo(productMeas.getSalesChannel(), productMeas, productMeas.getRelativeId());
+    }
+
+    public List<String> lookupMeasurementExistence(List<String> relativeIds) {
+        //TODO : similarly productService's lookupExistProduct
+        return null;
     }
     
 }

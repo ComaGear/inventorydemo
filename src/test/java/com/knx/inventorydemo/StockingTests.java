@@ -243,6 +243,22 @@ public class StockingTests {
     }
 
     @Test
+    public void insertUnexistProductGetNotifyReturn(){
+
+        
+
+
+        String id = "9999";
+
+        ArrayList<String> arrayList = new ArrayList<String>();
+        arrayList.add(id);
+        List<String> returnIds = productService.lookupUnexistProduct(arrayList);
+
+        assertEquals(id, returnIds.get(0));
+        assertEquals(returnIds.size(), 1);
+    }
+
+    @Test
     public void gettingMoveOutAndMoveInWithDateCondition(){
 
         String id = productMeta9971.getId();

@@ -22,7 +22,10 @@ import com.knx.inventorydemo.entity.StockInDocs;
 import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;
 import com.knx.inventorydemo.entity.Stocking;
+import com.knx.inventorydemo.exception.MeasurementValidationException;
+import com.knx.inventorydemo.exception.ProductAndMeasurementValidationException;
 import com.knx.inventorydemo.exception.ProductUnactivityException;
+import com.knx.inventorydemo.exception.ProductValidationException;
 import com.knx.inventorydemo.mapper.ProductMovementMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
@@ -46,6 +49,20 @@ public class StockingService{
         List<ProductMovement> beingMovements = new LinkedList<ProductMovement>();
         beingMovements.addAll(pendingMovements);
         pendingMovements.clear();
+        // // checking all beingMovement's product and measurement validation
+        // ProductAndMeasurementValidationException error = new ProductAndMeasurementValidationException();
+        // try{
+        //     productService.checkProductValidation(beingMovements);
+        // } catch (ProductValidationException e){
+        //     error.setUnexistProductIds(e.getUnexistProductIds());
+        // }
+        
+        // try{
+        //     measurementService.checkMeasurementValidation(beingMovements);
+        // } catch (MeasurementValidationException e){
+        //     error.setUnexistMeasurements(e.getUnexistProductIds());
+        // }
+        // if(error.hasError()) throw error;
 
         List<ProductMovement> ensureStockingMovements = new LinkedList<ProductMovement>();
         HashMap<String, Double> ensureStockingMap = new HashMap<String, Double>();
@@ -568,6 +585,29 @@ public class StockingService{
 
     public boolean pushMovement(ProductMovement movement){
         return this.pushMovement(movement, false);
+    }
+
+    public void pushMovement(List<ProductMovement> movements){
+    
+        LinkedList<String> productIds = new LinkedList<String>();
+        LinkedList<String> relativeIds = new LinkedList<String>();
+        for(ProductMovement moves : movements){
+            if(!productIds.contains(moves.getProductId()))
+                productIds.add(moves.getProductId());
+            if(!relativeIds.contains(moves.getRelativeId()))
+            relativeIds.add(moves.getRelativeId());
+        }
+        List<String> unExistedProductIds = productService.lookupUnexistProduct(productIds);
+        List<String> unActiveProductIds = productService.getProductUnactivity(productIds);
+        List<String> unExistMeasurement = measurementService.lookupMeasurementExistence(relativeIds);
+
+        List<ProductMovement> tempList = new LinkedList<ProductMovement>();
+        for(ProductMovement moves : movements){
+            if(tempList.size() == 0){
+                
+            }
+        }
+
     }
 
     /**
