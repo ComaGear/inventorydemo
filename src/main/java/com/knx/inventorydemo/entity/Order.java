@@ -2,11 +2,12 @@ package com.knx.inventorydemo.entity;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Order {
     
     private String orderId;
-    private ArrayList<StockMoveOut> productMovements;
+    private List<StockMoveOut> productMovements;
     private String channel;
     private String status;
     private Date date;
@@ -67,7 +68,7 @@ public class Order {
         return false;
     }
 
-    public ArrayList<StockMoveOut> getMovements(){
+    public List<StockMoveOut> getMovements(){
         return productMovements;
     }
 

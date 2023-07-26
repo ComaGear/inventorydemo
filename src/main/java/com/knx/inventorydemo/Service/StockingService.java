@@ -22,10 +22,7 @@ import com.knx.inventorydemo.entity.StockInDocs;
 import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;
 import com.knx.inventorydemo.entity.Stocking;
-import com.knx.inventorydemo.exception.MeasurementValidationException;
-import com.knx.inventorydemo.exception.ProductAndMeasurementValidationException;
-import com.knx.inventorydemo.exception.ProductUnactivityException;
-import com.knx.inventorydemo.exception.ProductValidationException;
+import com.knx.inventorydemo.exception.MovementValidationException;
 import com.knx.inventorydemo.mapper.ProductMovementMapper;
 import com.knx.inventorydemo.mapper.ProductStockingMapper;
 
@@ -571,21 +568,21 @@ public class StockingService{
      * @param skipCheck this using to reduce resource of query, free up checking when already checking by before.
      * @return pushing result. return true when success.
      */
-    private boolean pushMovement(ProductMovement movement, boolean skipCheck){
+    // private boolean pushMovement(ProductMovement movement, boolean skipCheck){
 
-        LinkedList<String> linkedList = new LinkedList<String>();
-        linkedList.add(movement.getProductId());
-        List<String> unactivityList = null;
-        if(!skipCheck) unactivityList = productService.getProductUnactivity(linkedList);
+    //     LinkedList<String> linkedList = new LinkedList<String>();
+    //     linkedList.add(movement.getProductId());
+    //     List<String> unactivityList = null;
+    //     if(!skipCheck) unactivityList = productService.getProductUnactivity(linkedList);
 
-        if(unactivityList == null || unactivityList.isEmpty()) pendingMovements.add(movement);
-        if(unactivityList != null && unactivityList.get(0).equals(movement.getProductId())) return false;
-        return true;
-    }
+    //     if(unactivityList == null || unactivityList.isEmpty()) pendingMovements.add(movement);
+    //     if(unactivityList != null && unactivityList.get(0).equals(movement.getProductId())) return false;
+    //     return true;
+    // }
 
-    public boolean pushMovement(ProductMovement movement){
-        return this.pushMovement(movement, false);
-    }
+    // public boolean pushMovement(ProductMovement movement){
+    //     return this.pushMovement(movement, false);
+    // }
 
     public void pushMovement(List<ProductMovement> movements){
     
@@ -602,131 +599,247 @@ public class StockingService{
         List<String> unExistMeasurement = measurementService.lookupMeasurementExistence(relativeIds);
 
         List<ProductMovement> tempList = new LinkedList<ProductMovement>();
+        List<String> NonValidDocsIds = new LinkedList<String>();
         for(ProductMovement moves : movements){
-            if(tempList.size() == 0){
-                
+
+
+            // casting to sub class of productMovement obtains Order or Docs ID
+            String moveDocsId = "";
+            if(moves instanceof StockMoveOut){
+                StockMoveOut moveOut = (StockMoveOut) moves; 
+                moveDocsId = moveOut.getOrderId();
+            }
+            if(moves instanceof StockMoveIn){
+                StockMoveIn moveOut = (StockMoveIn) moves; 
+                moveDocsId = moveOut.getDocsId();
+            }
+            
+
+            // add a new move and next loop since tempList is empty but MoveDocsId should not in non-valid order/docs
+            if(tempList.size() == 0 && !NonValidDocsIds.get(NonValidDocsIds.size() -1).equals(moveDocsId)){
+                tempList.add(moves);
+                continue;
+            }
+            if(NonValidDocsIds.get(NonValidDocsIds.size() -1).equals(moveDocsId)){
+                continue;
+            }
+
+            // obtaining previous docs ID.
+            String previousDocsId = "";
+            ProductMovement tempMoves = tempList.get(0);
+            if(tempMoves instanceof StockMoveOut){
+                StockMoveOut tempMoveOut = (StockMoveOut) tempMoves;
+                previousDocsId = tempMoveOut.getOrderId();
+            }
+            if(tempMoves instanceof StockMoveIn){
+                StockMoveIn tempMoveOut = (StockMoveIn) tempMoves;
+                previousDocsId = tempMoveOut.getDocsId();
+            }
+
+
+            // add moves to list with same docsId. elsewise push tempList's movement to pendingMovements queue, clear tempList.
+            if(previousDocsId.equals(moveDocsId)){
+                tempList.add(moves);
+            } else {
+                pendingMovements.addAll(tempList);
+                tempList.clear();
+                tempList.add(moves);
+            }
+
+            String productId = moves.getProductId();
+            String relativeId = moves.getRelativeId();
+
+            if(unExistedProductIds.contains(productId) || unActiveProductIds.contains(productId) || unExistMeasurement.contains(relativeId)){
+
+                NonValidDocsIds.add(moveDocsId);
+                tempList.clear();
+            }
+            
+        }
+        // end of movements push movement to pendingMovements
+        if(!tempList.isEmpty()){
+            pendingMovements.addAll(tempList);
+            tempList.clear();
+        }
+        
+        HashMap<String, HashMap<String, List<String>>> nonValidMap = new HashMap<String, HashMap<String, List<String>>>();
+        for(ProductMovement moves : movements){
+            
+            String moveDocsId = "";
+            if(moves instanceof StockMoveOut){
+                StockMoveOut moveOut = (StockMoveOut) moves; 
+                moveDocsId = moveOut.getOrderId();
+            }
+            if(moves instanceof StockMoveIn){
+                StockMoveIn moveOut = (StockMoveIn) moves; 
+                moveDocsId = moveOut.getDocsId();
+            }
+            
+            if(NonValidDocsIds.contains(moveDocsId)){
+                String productId = moves.getProductId();
+                String relativeId = moves.getRelativeId();
+
+                if(!nonValidMap.containsKey(moveDocsId)) nonValidMap.put(moveDocsId, new HashMap<String, List<String>>());
+
+                if(unExistedProductIds.contains(productId)){ 
+
+                    HashMap<String, List<String>> hashMap = nonValidMap.get(moveDocsId);
+                    if(!hashMap.containsKey(MovementValidationException.UNEXISTED_PRODUCT_ID)) hashMap.put(
+                        MovementValidationException.UNEXISTED_PRODUCT_ID, new LinkedList<String>());
+                    hashMap.get(MovementValidationException.UNEXISTED_PRODUCT_ID).add(productId);
+                }
+                if(unExistMeasurement.contains(relativeId)){    
+
+                    HashMap<String, List<String>> hashMap = nonValidMap.get(moveDocsId);
+                    if(!hashMap.containsKey(MovementValidationException.UNEXISTED_MEASUREMENT)) hashMap.put(
+                        MovementValidationException.UNEXISTED_MEASUREMENT, new LinkedList<String>());
+                    hashMap.get(MovementValidationException.UNEXISTED_MEASUREMENT).add(relativeId);
+                }
+                if(unActiveProductIds.contains(productId)){ 
+
+                    HashMap<String, List<String>> hashMap = nonValidMap.get(moveDocsId);
+                    if(!hashMap.containsKey(MovementValidationException.UNACTIVE_PRODUCT_ID)) hashMap.put(
+                        MovementValidationException.UNACTIVE_PRODUCT_ID, new LinkedList<String>());
+                    hashMap.get(MovementValidationException.UNACTIVE_PRODUCT_ID).add(productId);
+                }
             }
         }
 
+        if(!nonValidMap.isEmpty()){
+            MovementValidationException movementValidationException = new MovementValidationException();
+            movementValidationException.setNonValidMap(nonValidMap);
+            throw movementValidationException;
+        }
     }
 
-    /**
-     * @param order
-     * @return
-     */
-    public List<ProductMovement> pushMovement(Order order){
+    public void pushMovement(Order order){
         if(order == null || !order.hasMovement()) { throw new NullPointerException("order is null or emptry."); }
 
-        LinkedList<String> toCheckingList = new LinkedList<String>();
-        Iterator<StockMoveOut> checkingIterator = order.getMovements().iterator();
-        while(checkingIterator.hasNext()){
-            toCheckingList.add(checkingIterator.next().getProductId());
+        List<StockMoveOut> movements = order.getMovements();
+        List<ProductMovement> moves = new LinkedList<ProductMovement>();
+        for(StockMoveOut moveOut : movements){
+            moves.add(moveOut);
         }
-        List<String> unactivityList = productService.getProductUnactivity(toCheckingList);
+        this.pushMovement(moves);
 
-        // throw exception return to caller and give a list of unactitvity product to exception member that has given following.
-        if(unactivityList != null && !unactivityList.isEmpty()){
-            ProductUnactivityException exception = new ProductUnactivityException("checked unactivity product has" + unactivityList.toString());
-            exception.setUnactivityProductList(unactivityList);
-            throw exception;
-        }
+        // LinkedList<String> toCheckingList = new LinkedList<String>();
+        // Iterator<StockMoveOut> checkingIterator = order.getMovements().iterator();
+        // while(checkingIterator.hasNext()){
+        //     toCheckingList.add(checkingIterator.next().getProductId());
+        // }
+        // List<String> unactivityList = productService.getProductUnactivity(toCheckingList);
 
-        LinkedList<ProductMovement> unablePushList = new LinkedList<ProductMovement>();
-        Iterator<StockMoveOut> iterator = order.getMovements().iterator();
-        while(iterator.hasNext()){
-            ProductMovement moves = iterator.next();
-            boolean added = this.pushMovement(moves, true);
-            if(!added) {
-                unablePushList.add(moves);
-            }
-        }
-        order.setAnalysed(true);
-        return unablePushList.isEmpty() ? null : unablePushList;
+        // // throw exception return to caller and give a list of unactitvity product to exception member that has given following.
+        // if(unactivityList != null && !unactivityList.isEmpty()){
+        //     ProductUnactivityException exception = new ProductUnactivityException("checked unactivity product has" + unactivityList.toString());
+        //     exception.setUnactivityProductList(unactivityList);
+        //     throw exception;
+        // }
+
+        // LinkedList<ProductMovement> unablePushList = new LinkedList<ProductMovement>();
+        // Iterator<StockMoveOut> iterator = movements.iterator();
+        // while(iterator.hasNext()){
+        //     ProductMovement moves = iterator.next();
+        //     boolean added = this.pushMovement(moves);
+        //     if(!added) {
+        //         unablePushList.add(moves);
+        //     }
+        // }
+        // order.setAnalysed(true);
+        // return unablePushList.isEmpty() ? null : unablePushList;
     }
 
-    public Map<Order, List<String>> pushMovement(List<Order> orders){
-        if(orders == null || orders.isEmpty()) throw new NullPointerException("orders is null or emptry");
+    // public Map<Order, List<String>> pushMovement(List<Order> orders){
+    //     if(orders == null || orders.isEmpty()) throw new NullPointerException("orders is null or emptry");
 
-        HashMap<Order, List<String>> unablePushOrders = new HashMap<Order, List<String>>();
+    //     HashMap<Order, List<String>> unablePushOrders = new HashMap<Order, List<String>>();
 
-        // a list of unable insert to pending cause by contains product is not activity. reject certain order to verify.
-        List<Order> unInsertOrders = new LinkedList<Order>();
+    //     // a list of unable insert to pending cause by contains product is not activity. reject certain order to verify.
+    //     List<Order> unInsertOrders = new LinkedList<Order>();
 
-        for(Order order : orders){
+    //     for(Order order : orders){
 
-            List<String> unactivityProducts = null;
+    //         List<String> unactivityProducts = null;
 
-            try{
-                this.pushMovement(order);
-            } catch(ProductUnactivityException e){ 
-                unactivityProducts = e.getUnactivityProductList(); 
-            }
+    //         try{
+    //             this.pushMovement(order);
+    //         } catch(ProductUnactivityException e){ 
+    //             unactivityProducts = e.getUnactivityProductList(); 
+    //         }
 
-            if(unactivityProducts != null){
-                unInsertOrders.add(order);
-                unablePushOrders.put(order, unactivityProducts);
-            }
+    //         if(unactivityProducts != null){
+    //             unInsertOrders.add(order);
+    //             unablePushOrders.put(order, unactivityProducts);
+    //         }
+    //     }
+
+    //     return unablePushOrders.isEmpty() ? null : unablePushOrders;
+    // }
+
+    public void pushMoveIns(StockInDocs docs){
+        if(docs == null || !docs.hasMovement()) { throw new NullPointerException("order is null or emptry."); }
+
+        List<StockMoveIn> movements = docs.getMovements();
+        List<ProductMovement> moves = new LinkedList<ProductMovement>();
+        for(StockMoveIn moveOut : movements){
+            moves.add(moveOut);
         }
-
-        return unablePushOrders.isEmpty() ? null : unablePushOrders;
-    }
-
-    public List<StockMoveIn> pushMoveIns(StockInDocs docs){
+        this.pushMovement(moves);
         
-        List<String> productIds = new LinkedList<String>();
-        Iterator<StockMoveIn> checkingIterator = docs.getMovements().iterator();
-        while(checkingIterator.hasNext()){
-            StockMoveIn next = checkingIterator.next();
-            if(!productIds.contains(next.getProductId())) productIds.add(next.getProductId());
-        }
+        // List<String> productIds = new LinkedList<String>();
+        // Iterator<StockMoveIn> checkingIterator = docs.getMovements().iterator();
+        // while(checkingIterator.hasNext()){
+        //     StockMoveIn next = checkingIterator.next();
+        //     if(!productIds.contains(next.getProductId())) productIds.add(next.getProductId());
+        // }
 
-        List<String> unactivityList = productService.getProductUnactivity(productIds);
+        // List<String> unactivityList = productService.getProductUnactivity(productIds);
 
-        // throw exception return to caller and give a list of unactitvity product to exception member that has given following.
-        if(unactivityList != null && !unactivityList.isEmpty()){
-            ProductUnactivityException exception = new ProductUnactivityException("checked unactivity product has" + unactivityList.toString());
-            exception.setUnactivityProductList(unactivityList);
-            throw exception;
-        }
+        // // throw exception return to caller and give a list of unactitvity product to exception member that has given following.
+        // if(unactivityList != null && !unactivityList.isEmpty()){
+        //     ProductUnactivityException exception = new ProductUnactivityException("checked unactivity product has" + unactivityList.toString());
+        //     exception.setUnactivityProductList(unactivityList);
+        //     throw exception;
+        // }
 
-        LinkedList<StockMoveIn> unablePushList = new LinkedList<StockMoveIn>();
-        Iterator<StockMoveIn> iterator = docs.getMovements().iterator();
-        while(iterator.hasNext()){
-            StockMoveIn moves = iterator.next();
-            boolean added = this.pushMovement(moves, true);
-            if(!added) {
-                unablePushList.add(moves);
-            }
-        }
-        return unablePushList.isEmpty() ? null : unablePushList;
+        // LinkedList<StockMoveIn> unablePushList = new LinkedList<StockMoveIn>();
+        // Iterator<StockMoveIn> iterator = docs.getMovements().iterator();
+        // while(iterator.hasNext()){
+        //     StockMoveIn moves = iterator.next();
+        //     boolean added = this.pushMovement(moves, true);
+        //     if(!added) {
+        //         unablePushList.add(moves);
+        //     }
+        // }
+        // return unablePushList.isEmpty() ? null : unablePushList;
     }
 
-    public Map<StockInDocs, List<String>> pushMoveIns(List<StockInDocs> docsList){
-        if(docsList == null || docsList.isEmpty()) throw new NullPointerException("docsList is null or emptry");
+    // public Map<StockInDocs, List<String>> pushMoveIns(List<StockInDocs> docsList){
+    //     if(docsList == null || docsList.isEmpty()) throw new NullPointerException("docsList is null or emptry");
 
-        HashMap<StockInDocs, List<String>> unablePushDocsList = new HashMap<StockInDocs, List<String>>();
+    //     HashMap<StockInDocs, List<String>> unablePushDocsList = new HashMap<StockInDocs, List<String>>();
 
-        // a list of unable insert to pending cause by contains product is not activity. reject certain order to verify.
-        List<StockInDocs> unInsertOrders = new LinkedList<StockInDocs>();
+    //     // a list of unable insert to pending cause by contains product is not activity. reject certain order to verify.
+    //     List<StockInDocs> unInsertOrders = new LinkedList<StockInDocs>();
 
-        for(StockInDocs docs : docsList){
+    //     for(StockInDocs docs : docsList){
 
-            List<String> unactivityProducts = null;
+    //         List<String> unactivityProducts = null;
 
-            try{
-                this.pushMoveIns(docs);
-            } catch(ProductUnactivityException e){ 
-                unactivityProducts = e.getUnactivityProductList(); 
-            }
+    //         try{
+    //             this.pushMoveIns(docs);
+    //         } catch(ProductUnactivityException e){ 
+    //             unactivityProducts = e.getUnactivityProductList(); 
+    //         }
 
-            if(unactivityProducts != null){
-                unInsertOrders.add(docs);
-                unablePushDocsList.put(docs, unactivityProducts);
-            }
-        }
+    //         if(unactivityProducts != null){
+    //             unInsertOrders.add(docs);
+    //             unablePushDocsList.put(docs, unactivityProducts);
+    //         }
+    //     }
 
-        return unablePushDocsList.isEmpty() ? null : unablePushDocsList;
-    }
+    //     return unablePushDocsList.isEmpty() ? null : unablePushDocsList;
+    // }
 
     public List<ProductMovement> fetchMovesQueueMovementByRelativeId(List<String> relativeIds){
         if(relativeIds == null || relativeIds.isEmpty()) throw new NullPointerException(); // give a message.
