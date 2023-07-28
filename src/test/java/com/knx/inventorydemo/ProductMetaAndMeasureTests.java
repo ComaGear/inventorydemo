@@ -1,8 +1,10 @@
 package com.knx.inventorydemo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -112,11 +114,20 @@ public class ProductMetaAndMeasureTests {
     //         ,productMeas.getLayer());
     // }
     
+    @Test
+    public void obtainsUnexistMeasurementShouldSuccess(){
+        LinkedList<String> linkedList = new LinkedList<String>();
+        linkedList.add("999-CTN");
+        linkedList.add("2232");
+        List<String> unexistMeasurements = measurementService.lookupMeasurementExistence(linkedList);
+        
+        assertTrue(unexistMeasurements.contains("999-CTN"));
+        assertTrue(unexistMeasurements.contains("2232"));
+    }
 
     public void settingNewUpdateRule(){
     }
 
-    @Test
     public void gettingMeasuresByRelativeId(){
 
     }

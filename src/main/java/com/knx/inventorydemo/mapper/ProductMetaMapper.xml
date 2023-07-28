@@ -77,7 +77,7 @@
   <insert id="insertToCheckExistProductIds" parameterType="java.util.List">
     insert into to_obtains_unexist_product (id)
     values
-    <foreach collection="productIds" index="index" item="productId">
+    <foreach collection="productIds" index="index" item="productId" separator=",">
       (#{productId})
     </foreach>
   </insert>

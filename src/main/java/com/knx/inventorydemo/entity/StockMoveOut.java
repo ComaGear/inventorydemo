@@ -8,8 +8,9 @@ public class StockMoveOut extends ProductMovement implements Comparable<StockMov
         return OrderId;
     }
 
-    public void setOrderId(String orderId) {
+    public StockMoveOut setOrderId(String orderId) {
         OrderId = orderId;
+        return this;
     }
 
     public String getSalesChannel() {

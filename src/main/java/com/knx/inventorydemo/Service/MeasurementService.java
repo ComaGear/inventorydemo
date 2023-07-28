@@ -245,8 +245,14 @@ public class MeasurementService  {
     }
 
     public List<String> lookupMeasurementExistence(List<String> relativeIds) {
-        //TODO : similarly productService's lookupExistProduct
-        return null;
+
+        productMeasurementMapper.prepareForUnexistRelativeIds();
+        productMeasurementMapper.insertToCheckExistRelativeIds(relativeIds);
+        List<String> unexistRelativeIds = productMeasurementMapper.getUnexistRelativeIds();
+
+        productMeasurementMapper.endOfGetUnexistRelativeIds();
+
+        return unexistRelativeIds;
     }
     
 }

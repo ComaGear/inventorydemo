@@ -28,6 +28,42 @@ public interface ProductMeasurementMapper {
     public List<ProductMeasurement> bulkGetProductMeasByRelativeIdwithChannel(String channel, List<String> relativeIds);
     
     public List<ProductMeasurement> getProductMeasListBySimilarRelativeId(String channel, String relativeId);
+
+    /**
+     * this method is a phase of getting unexist product's relative id in database.
+     * @see getUnexistRelativeIds
+     * @return success of creating temporary table.
+     */
+    public boolean prepareForUnexistRelativeIds();
+
+    
+    /**
+     * this method is a phase of getting unexist product's relative id in database.
+     * @see getUnexistRelativeIds
+     * @param relativeIds a list of product's relative id being check.
+     * @return how much row has been inserted.
+     */
+    public int insertToCheckExistRelativeIds(List<String> relativeIds);
+
+
+    /**
+     * <pre>
+     * this method obtains un-existed product's relative id, it require some step before can obtains it.
+     * <strong>phase 1</strong> prepareForUnexistRelativeIds to creating a table.
+     * <strong>phase 2</strong> insertToCheckExistRelativeIds inserting which product's relative id id being loopup.
+     * <strong>phase 3</strong> getUnexistRelativeIds receive which product's relative id id is not existed.
+     * <strong>phase 4</strong> endOfGetUnexistRelativeIds clearing all temporary data.
+     * </pre>
+     * @return a list of un-existed product's relative id id in database's product_meta.
+     */
+    public List<String> getUnexistRelativeIds();
+
+    /**
+     * this method is a phase of getting unexist product id in database.
+     * @see getUnexistRelativeIds
+     * @return how much row has been deleted.
+     */
+    public int endOfGetUnexistRelativeIds();
     
     public void measInit();
 

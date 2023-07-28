@@ -66,6 +66,29 @@
         where relative_id like #{relativeId} and channel = #{channel}
     </select>
 
+    <insert id="prepareForUnexistRelativeIds">
+        create temporary table if not exists to_obtains_unexist_measurement
+        ( id varchar(20) not null );
+    </insert>
+
+    <insert id="insertToCheckExistRelativeIds" parameterType="java.util.List">
+        insert into to_obtains_unexist_measurement (id)
+        values
+        <foreach collection="relativeIds" index="index" item="relativeId" separator=",">
+        (#{relativeId})
+        </foreach>
+    </insert>
+
+    <select id="getUnexistRelativeIds" resultType="java.lang.String">
+        select id from to_obtains_unexist_measurement
+        where not exists (select relative_id from product_measurement where product_measurement.relative_id = to_obtains_unexist_measurement.id);
+    </select>
+
+    <delete id="endOfGetUnexistRelativeIds">
+        delete from to_obtains_unexist_measurement;
+    </delete>
+
+
     <delete id="bulkRemoveMeasureByProductIds" parameterType="java.util.List">
         delete low_priority from product_measurement where product_id in
         <foreach collection="productIds" item="productId" open="(" close=")" separator=",">

@@ -46,20 +46,6 @@ public class StockingService{
         List<ProductMovement> beingMovements = new LinkedList<ProductMovement>();
         beingMovements.addAll(pendingMovements);
         pendingMovements.clear();
-        // // checking all beingMovement's product and measurement validation
-        // ProductAndMeasurementValidationException error = new ProductAndMeasurementValidationException();
-        // try{
-        //     productService.checkProductValidation(beingMovements);
-        // } catch (ProductValidationException e){
-        //     error.setUnexistProductIds(e.getUnexistProductIds());
-        // }
-        
-        // try{
-        //     measurementService.checkMeasurementValidation(beingMovements);
-        // } catch (MeasurementValidationException e){
-        //     error.setUnexistMeasurements(e.getUnexistProductIds());
-        // }
-        // if(error.hasError()) throw error;
 
         List<ProductMovement> ensureStockingMovements = new LinkedList<ProductMovement>();
         HashMap<String, Double> ensureStockingMap = new HashMap<String, Double>();
@@ -584,7 +570,7 @@ public class StockingService{
     //     return this.pushMovement(movement, false);
     // }
 
-    public void pushMovement(List<ProductMovement> movements){
+    public void pushMovement(List<ProductMovement> movements) throws MovementValidationException{
     
         LinkedList<String> productIds = new LinkedList<String>();
         LinkedList<String> relativeIds = new LinkedList<String>();
@@ -615,45 +601,52 @@ public class StockingService{
             }
             
 
-            // add a new move and next loop since tempList is empty but MoveDocsId should not in non-valid order/docs
-            if(tempList.size() == 0 && !NonValidDocsIds.get(NonValidDocsIds.size() -1).equals(moveDocsId)){
-                tempList.add(moves);
-                continue;
-            }
-            if(NonValidDocsIds.get(NonValidDocsIds.size() -1).equals(moveDocsId)){
-                continue;
-            }
-
             // obtaining previous docs ID.
             String previousDocsId = "";
-            ProductMovement tempMoves = tempList.get(0);
-            if(tempMoves instanceof StockMoveOut){
-                StockMoveOut tempMoveOut = (StockMoveOut) tempMoves;
-                previousDocsId = tempMoveOut.getOrderId();
-            }
-            if(tempMoves instanceof StockMoveIn){
-                StockMoveIn tempMoveOut = (StockMoveIn) tempMoves;
-                previousDocsId = tempMoveOut.getDocsId();
-            }
-
-
-            // add moves to list with same docsId. elsewise push tempList's movement to pendingMovements queue, clear tempList.
-            if(previousDocsId.equals(moveDocsId)){
-                tempList.add(moves);
-            } else {
-                pendingMovements.addAll(tempList);
-                tempList.clear();
-                tempList.add(moves);
+            if(!tempList.isEmpty()){
+                ProductMovement tempMoves = tempList.get(0);
+                if(tempMoves instanceof StockMoveOut){
+                    StockMoveOut tempMoveOut = (StockMoveOut) tempMoves;
+                    previousDocsId = tempMoveOut.getOrderId();
+                }
+                if(tempMoves instanceof StockMoveIn){
+                    StockMoveIn tempMoveOut = (StockMoveIn) tempMoves;
+                    previousDocsId = tempMoveOut.getDocsId();
+                }
             }
 
             String productId = moves.getProductId();
             String relativeId = moves.getRelativeId();
 
+            if(!NonValidDocsIds.isEmpty() && NonValidDocsIds.get(NonValidDocsIds.size() -1).equals(moveDocsId)){
+                continue;
+            }
             if(unExistedProductIds.contains(productId) || unActiveProductIds.contains(productId) || unExistMeasurement.contains(relativeId)){
 
                 NonValidDocsIds.add(moveDocsId);
                 tempList.clear();
+                continue;
             }
+            
+
+            // add moves to list with same docsId. elsewise push tempList's movement to pendingMovements queue, clear tempList.
+            if(previousDocsId.equals(moveDocsId)){
+                tempList.add(moves);
+                continue;
+            } else {
+                pendingMovements.addAll(tempList);
+                tempList.clear();
+                tempList.add(moves);
+                continue;
+            }
+
+
+            // add a new move and next loop since tempList is empty but MoveDocsId should not in non-valid order/docs
+            // if(tempList.size() == 0 && (NonValidDocsIds.isEmpty() || !NonValidDocsIds.get(NonValidDocsIds.size()-1).equals(moveDocsId))){
+            //     tempList.add(moves);
+            //     continue;
+            // }
+
             
         }
         // end of movements push movement to pendingMovements
@@ -712,7 +705,7 @@ public class StockingService{
         }
     }
 
-    public void pushMovement(Order order){
+    public void pushMovement(Order order) throws MovementValidationException{
         if(order == null || !order.hasMovement()) { throw new NullPointerException("order is null or emptry."); }
 
         List<StockMoveOut> movements = order.getMovements();

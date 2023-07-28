@@ -17,5 +17,6 @@ public class MovementValidationException extends RuntimeException {
     }
 
     public void setNonValidMap(HashMap<String, HashMap<String, List<String>>> nonValidMap) {
+        this.nonValidMap = nonValidMap;
     }
 }

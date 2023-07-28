@@ -2,9 +2,11 @@ package com.knx.inventorydemo;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,7 +29,7 @@ import com.knx.inventorydemo.entity.ProductMovement;
 import com.knx.inventorydemo.entity.StockInDocs;
 import com.knx.inventorydemo.entity.StockMoveIn;
 import com.knx.inventorydemo.entity.StockMoveOut;
-import com.knx.inventorydemo.exception.ProductUnactivityException;
+import com.knx.inventorydemo.exception.MovementValidationException;
 
 @SpringBootTest
 public class StockingTests {
@@ -184,9 +186,12 @@ public class StockingTests {
     public void tryPushingUnactivityProductMovement(){
         try{
             stockingService.pushMovement(orderO1133MERCHANTz1);
-        } catch(ProductUnactivityException e){
-            List<String> unactivityProductList = e.getUnactivityProductList();
-            assertEquals(productMeta1133.getId(), unactivityProductList.get(0));
+        } catch(MovementValidationException e){
+
+            assertTrue(e.getNonValidMap().containsKey(orderO1133MERCHANTz1.getOrderId()));
+
+            List<String> unactiveProductIds = e.getNonValidMap().get(orderO1133MERCHANTz1.getOrderId()).get(MovementValidationException.UNACTIVE_PRODUCT_ID);
+            assertEquals(productMeta1133.getId(), unactiveProductIds.get(0));
         }
     }
 
@@ -243,19 +248,28 @@ public class StockingTests {
     }
 
     @Test
-    public void insertUnexistProductGetNotifyReturn(){
+    public void insertNonValidOrderGetThrowException(){
 
+        Date now = new Date(System.currentTimeMillis());
+
+        String unExistProductId = "9999";
+
+        Order orderWithNonValid1 = new Order();
+        
+        orderWithNonValid1.setOrderId("orderT");
+        orderWithNonValid1.pushMovement((StockMoveOut) new StockMoveOut().setOrderId(orderWithNonValid1.getOrderId()).setProductId(unExistProductId).setDate(now).setQuantity(1)
+            .setUsedUOM("UNIT").setRelativeId(unExistProductId + "-UNIT"));
         
 
+        try{
+            stockingService.pushMovement(orderWithNonValid1);
+        } catch(MovementValidationException e){
+            List<String> unexistProductIds = e.getNonValidMap().get(orderWithNonValid1.getOrderId()).get(MovementValidationException.UNEXISTED_PRODUCT_ID);
+            List<String> unexistMeasurement = e.getNonValidMap().get(orderWithNonValid1.getOrderId()).get(MovementValidationException.UNEXISTED_MEASUREMENT);
 
-        String id = "9999";
-
-        ArrayList<String> arrayList = new ArrayList<String>();
-        arrayList.add(id);
-        List<String> returnIds = productService.lookupUnexistProduct(arrayList);
-
-        assertEquals(id, returnIds.get(0));
-        assertEquals(returnIds.size(), 1);
+            assertEquals(unexistProductIds.get(0), unExistProductId);
+            assertEquals(unexistMeasurement.get(0), unExistProductId + "-UNIT");
+        }
     }
 
     @Test
