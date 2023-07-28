@@ -25,8 +25,9 @@ public class ProductMeta {
         return activity;
     }
 
-    public void setActivity(boolean activity) {
+    public ProductMeta setActivity(boolean activity) {
         this.activity = activity;
+        return this;
     }
 
     public String getDefaultUom() {

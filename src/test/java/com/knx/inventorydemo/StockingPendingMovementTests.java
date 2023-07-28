@@ -43,7 +43,7 @@ public class StockingPendingMovementTests {
         product = new ProductMeta()
             .setId("9667")
             .setName("Nabati Chocolate 40g x 10pcs")
-            .setDefaultUom(UNIT);
+            .setDefaultUom(UNIT).setActivity(true);
         productService.addNewProduct(product);
 
         ProductMeasurement productMeasOriginChannel = new ProductMeasurement();
@@ -57,14 +57,14 @@ public class StockingPendingMovementTests {
                 .setChannel(ORIGIN);
     
         multiMovesOrder.pushMovement((StockMoveOut) new StockMoveOut()
-                .setRelativeId(multiMovesOrder.getOrderId())
+                .setOrderId(multiMovesOrder.getOrderId())
                 .setProductId(product.getId())
                 .setDate(Date.valueOf(LocalDate.now()))
                 .setQuantity(2)
                 .setUsedUOM(UNIT)
                 .setSalesChannel(multiMovesOrder.getChannel()))
             .pushMovement((StockMoveOut) new StockMoveOut()
-                .setRelativeId(multiMovesOrder.getOrderId())
+                .setOrderId(multiMovesOrder.getOrderId())
                 .setProductId(product.getId())
                 .setDate(Date.valueOf(LocalDate.now()))
                 .setQuantity(5)
@@ -76,7 +76,7 @@ public class StockingPendingMovementTests {
             .setChannel(ORIGIN);
         
         singleMovesOrder.pushMovement((StockMoveOut) new StockMoveOut()
-                .setRelativeId(singleMovesOrder.getOrderId())
+                .setOrderId(singleMovesOrder.getOrderId())
                 .setProductId(product.getId())
                 .setDate(Date.valueOf(LocalDate.now()))
                 .setQuantity(2)
@@ -94,7 +94,7 @@ public class StockingPendingMovementTests {
 
         List<String> list = new LinkedList<>();
         list.add(multiMovesOrder.getOrderId());
-        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByRelativeId(list);
+        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByOrderDocsIds(list);
         
         boolean equals = multiMovesOrder.getMovements().size() == returnList.size();
         log.info("order's movements size is " + multiMovesOrder.getMovements().size());
@@ -116,7 +116,7 @@ public class StockingPendingMovementTests {
         stockingService.pushMovement(singleMovesOrder);
         relativeIds.add(singleMovesOrder.getOrderId());
 
-        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByRelativeId(relativeIds);
+        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByOrderDocsIds(relativeIds);
 
         assertEquals(returnList.size(), singleMovesOrder.getMovements().size());
     }
@@ -132,7 +132,7 @@ public class StockingPendingMovementTests {
         relativeIds.add(singleMovesOrder.getOrderId());
         relativeIds.add(multiMovesOrder.getOrderId());
 
-        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByRelativeId(relativeIds);
+        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByOrderDocsIds(relativeIds);
 
         int size = 0;
         size = singleMovesOrder.getMovements().size() + size;
@@ -152,7 +152,7 @@ public class StockingPendingMovementTests {
         stockingService.pushMovement(multiMovesOrder);
         relativeIds.add(singleMovesOrder.getOrderId());
 
-        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByRelativeId(relativeIds);
+        List<ProductMovement> returnList = stockingService.fetchMovesQueueMovementByOrderDocsIds(relativeIds);
 
         assertEquals(singleMovesOrder.getMovements().size(), returnList.size());
 

@@ -834,8 +834,8 @@ public class StockingService{
     //     return unablePushDocsList.isEmpty() ? null : unablePushDocsList;
     // }
 
-    public List<ProductMovement> fetchMovesQueueMovementByRelativeId(List<String> relativeIds){
-        if(relativeIds == null || relativeIds.isEmpty()) throw new NullPointerException(); // give a message.
+    public List<ProductMovement> fetchMovesQueueMovementByOrderDocsIds(List<String> orderDocsIds){
+        if(orderDocsIds == null || orderDocsIds.isEmpty()) throw new NullPointerException(); // give a message.
 
         if(pendingMovements.isEmpty()) return null;
 
@@ -852,35 +852,66 @@ public class StockingService{
             @Override
             public int compare(ProductMovement o1, ProductMovement o2) {
 
-                if(o1.getRelativeId() == o2.getRelativeId()) return 0;
+                String o1DocsId = "";
+                if(o1 instanceof StockMoveOut){
+                    StockMoveOut moveOut = (StockMoveOut) o1;
+                    o1DocsId = moveOut.getOrderId();
+                }
+                if(o1 instanceof StockMoveIn){
+                    StockMoveIn moveOut = (StockMoveIn) o1;
+                    o1DocsId = moveOut.getDocsId();
+                }
 
-                return o1.getRelativeId().compareToIgnoreCase(o2.getRelativeId());
+                String o2DocsId = "";
+                if(o2 instanceof StockMoveOut){
+                    StockMoveOut moveOut = (StockMoveOut) o2;
+                    o2DocsId = moveOut.getOrderId();
+                }
+                if(o2 instanceof StockMoveIn){
+                    StockMoveIn moveOut = (StockMoveIn) o2;
+                    o2DocsId = moveOut.getDocsId();
+                }
+
+                if(o1DocsId == o2DocsId) return 0;
+
+                return o1DocsId.compareToIgnoreCase(o2DocsId);
             }
         });
-
-        relativeIds.sort(new Comparator<String>() {
+ 
+        orderDocsIds.sort(new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
 
-                return o1.compareToIgnoreCase(o2);
+                return o1 == o2 ? 0 : o1.compareToIgnoreCase(o2);
             }
         });
 
         logger.info("movementList is :" + movementList.toString());
-        logger.info("relativeIds is :" + relativeIds.toString());
+        logger.info("orderDocsIds is :" + orderDocsIds.toString());
 
         LinkedList<ProductMovement> linkedList = new LinkedList<ProductMovement>();
         int lastFoundIndex = 0;
-        int relativeIdsIndex = 0;
+        int orderDocsIdsIndex = 0;
         int movementIndex = 0;
-        for( ; relativeIdsIndex < relativeIds.size(); relativeIdsIndex++){
+        for( ; orderDocsIdsIndex < orderDocsIds.size(); orderDocsIdsIndex++){
 
-            if(movementList.get(movementIndex).getRelativeId() == relativeIds.get(relativeIdsIndex)){
+            String docsId = "";
+            movementList.get(movementIndex);
+            if(movementList.get(movementIndex) instanceof StockMoveOut){
+                StockMoveOut moveOut = (StockMoveOut) movementList.get(movementIndex);
+                docsId = moveOut.getOrderId();
+            }
+            if(movementList.get(movementIndex) instanceof StockMoveIn){
+                StockMoveIn moveOut = (StockMoveIn) movementList.get(movementIndex);
+                docsId = moveOut.getDocsId();
+            }
+
+            if(docsId == orderDocsIds.get(orderDocsIdsIndex)){
                 linkedList.add(movementList.get(movementIndex));
                 lastFoundIndex = movementIndex;
 
-                if((relativeIdsIndex + 1) != relativeIds.size()) {
-                    if(relativeIds.get(relativeIdsIndex + 1) != relativeIds.get(relativeIdsIndex))
+                if((orderDocsIdsIndex + 1) != orderDocsIds.size()) {
+                    if(orderDocsIds.get(orderDocsIdsIndex + 1) != orderDocsIds.get(orderDocsIdsIndex))
                         movementIndex++;
                     else 
                         continue;
@@ -888,7 +919,19 @@ public class StockingService{
             }
 
             for( ; movementIndex < movementList.size(); movementIndex++){
-                if(movementList.get(movementIndex).getRelativeId() == relativeIds.get(relativeIdsIndex)){
+
+                String docsId1 = "";
+                movementList.get(movementIndex);
+                if(movementList.get(movementIndex) instanceof StockMoveOut){
+                    StockMoveOut moveOut = (StockMoveOut) movementList.get(movementIndex);
+                    docsId1 = moveOut.getOrderId();
+                }
+                if(movementList.get(movementIndex) instanceof StockMoveIn){
+                    StockMoveIn moveOut = (StockMoveIn) movementList.get(movementIndex);
+                    docsId1 = moveOut.getDocsId();
+                }
+
+                if(docsId1 == orderDocsIds.get(orderDocsIdsIndex)){
                     linkedList.add(movementList.get(movementIndex));
     
                     lastFoundIndex = movementIndex;
