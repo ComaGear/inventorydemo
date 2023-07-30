@@ -1,4 +1,4 @@
-package com.knx.inventorydemo.utils;
+package com.knx.inventorydemo.utils.moveOutParser;
 
 import java.util.List;
 

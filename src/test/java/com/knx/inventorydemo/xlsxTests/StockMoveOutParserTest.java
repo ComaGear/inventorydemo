@@ -18,10 +18,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.knx.inventorydemo.Service.StockingService;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.StockMoveOut;
-import com.knx.inventorydemo.utils.PosSystemOrderReportContentHandler;
-import com.knx.inventorydemo.utils.ShopeeOrderReportContentHandler;
-import com.knx.inventorydemo.utils.StockMoveConverter;
-import com.knx.inventorydemo.utils.StockMoveOutXLSXParser;
+import com.knx.inventorydemo.utils.moveOutParser.PosSystemOrderReportContentHandler;
+import com.knx.inventorydemo.utils.moveOutParser.ShopeeOrderReportContentHandler;
+import com.knx.inventorydemo.utils.moveOutParser.StockMoveConverter;
+import com.knx.inventorydemo.utils.moveOutParser.StockMoveOutXLSXParser;
 
 @SpringBootTest
 public class StockMoveOutParserTest {

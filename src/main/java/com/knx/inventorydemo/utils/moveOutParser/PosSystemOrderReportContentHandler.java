@@ -1,4 +1,4 @@
-package com.knx.inventorydemo.utils;
+package com.knx.inventorydemo.utils.moveOutParser;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -18,7 +18,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.knx.inventorydemo.entity.StockMoveOut;
-import com.knx.inventorydemo.utils.StockMoveOutXLSXParser.dataType;
+import com.knx.inventorydemo.utils.moveOutParser.StockMoveOutXLSXParser.dataType;
 
 public class PosSystemOrderReportContentHandler extends DefaultHandler{
 
