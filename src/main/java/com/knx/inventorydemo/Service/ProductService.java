@@ -145,4 +145,9 @@ public class ProductService {
         return returnList;
     }
 
+    public void update(ProductMeta productMeta) {
+
+        productMetaMapper.update(productMeta);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.knx.inventorydemo.web.RestController;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.knx.inventorydemo.Service.MeasurementService;
 import com.knx.inventorydemo.Service.ProductService;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
@@ -28,25 +31,36 @@ public class ProductRestController {
 
     @Autowired
     ProductService productService;
+
+    @Autowired
+    MeasurementService measurementService;
+
+    @Autowired
+    JsonMapper mapper;
     
-    @GetMapping("/{id}")
-    public Map<String, String> getProduct(@PathVariable String id){
+    @GetMapping(path = "/{id}", consumes = "application/json")
+    public ProductMeta getProduct(@PathVariable String id){
 
-        HashMap<String, ProductMeta> hashMap = new HashMap<String, ProductMeta>();
+        // ObjectNode node = mapper.createObjectNode();
 
-        hashMap.put("9971", new ProductMeta().setId("9971").setName("Apollo Cake Chocolate 24pcs"));
-        hashMap.put("9972", new ProductMeta().setId("9972").setName("Apollo Cake Original 24pcs"));
-        hashMap.put("8891", new ProductMeta().setId("8891").setName("Nabati Strawberry"));
-        hashMap.put("9991", new ProductMeta().setId("9991").setName("No30gg Star 60pcs"));
+        // HashMap<String, ProductMeta> hashMap = new HashMap<String, ProductMeta>();
 
-        HashMap<String, String> returnMap = new HashMap<String, String>();
+        // hashMap.put("9971", new ProductMeta().setId("9971").setName("Apollo Cake Chocolate 24pcs"));
+        // hashMap.put("9972", new ProductMeta().setId("9972").setName("Apollo Cake Original 24pcs"));
+        // hashMap.put("8891", new ProductMeta().setId("8891").setName("Nabati Strawberry"));
+        // hashMap.put("9991", new ProductMeta().setId("9991").setName("No30gg Star 60pcs"));
+
+        // HashMap<String, String> returnMap = new HashMap<String, String>();
         
-        if(hashMap.containsKey(id)) {
-            returnMap.put("id", hashMap.get(id).getId());
-            returnMap.put("name", hashMap.get(id).getName());
-        }
+        // if(hashMap.containsKey(id)) {
+        //     returnMap.put("id", hashMap.get(id).getId());
+        //     returnMap.put("name", hashMap.get(id).getName());
+        // }
 
-        return !returnMap.isEmpty() ? returnMap : null;
+        // return !returnMap.isEmpty() ? returnMap : null;
+
+        ProductMeta productMetaById = productService.getProductMetaById(id);
+        return productMetaById;
     }
 
     @PostMapping(path = "/", produces = "application/json")
@@ -56,18 +70,20 @@ public class ProductRestController {
         ProductMeta productMeta = new ProductMeta();
         productMeta.setId(productNode.get("id").asText())
             .setName(productNode.get("name").asText())
-            .setDefaultUom(productNode.has("uom") ? productNode.get("uom").asText() : ProductMeasurement.DEFAULT_UOM)
+            .setDefaultUom(productNode.has("default_uom") ? productNode.get("default_uom").asText() : ProductMeasurement.DEFAULT_UOM)
             .setVendor(new Vendor().setName(productNode.get("vendor_name").asText()))
-            .setActivity(productNode.get("active").asText().equals("true"));
+            .setActivity(productNode.has("active") ? productNode.get("active").asText().equals("true") : false);
 
         ProductMeasurement measurement = null;
         if(!productNode.get("measurement").isNull()){
             measurement = new ProductMeasurement();
-            measurement.setUOM_name(productNode.get("name").asText())
+            JsonNode measurementNode = productNode.get("measurement");
+            measurement.setUOM_name(measurementNode.get("name").asText())
                 .setProductId(productMeta.getId())
-                .setAnotherBarcode(productNode.has("barcode") ? productNode.get("barcode").asText() : null)
-                .setMeasurement(Float.parseFloat(productNode.get("measure").asText()))
-                .setRelativeId(productNode.has("relative_id") ? productNode.get("relative_id").asText()
+                .setAnotherBarcode(measurementNode.has("barcode") ? measurementNode.get("barcode").asText() : null)
+                .setMeasurement(Float.parseFloat(measurementNode.get("measure").asText()))
+                .setSalesChannel(ProductUOM.LAYER)
+                .setRelativeId(measurementNode.has("relative_id") ? measurementNode.get("relative_id").asText()
                      : measurement.getProductId() + "-" + measurement.getUOM_name());
         }
 
@@ -84,7 +100,49 @@ public class ProductRestController {
     @PutMapping(path = "/{id}")
     public void updateProduct(@PathVariable String id, @RequestBody(required = true) ObjectNode objectNode){
         
-        if()
+        JsonNode productNode = objectNode.get("product");
+
+        ProductMeta productMeta = new ProductMeta();
+        productMeta.setId(id)
+            .setName(productNode.get("name").asText())
+            .setActivity(productNode.has("active") ? productNode.get("active").asText().equals("true") : false)
+            .setDefaultUom(productNode.has("default_uom") ? productNode.get("default_uom").asText() : null)
+            .setVendor(productNode.has("vendor") ? new Vendor().setName(productNode.get("vendor").asText()) : null);
+
+        ProductMeta.valid(productMeta);
+
+        ProductMeta productMetaById = productService.getProductMetaById(id);
+        if(!productMetaById.getDefaultUom().equals(productMeta.getDefaultUom())){
+
+            String relativeId = productMeta.getId() + "-" + productMeta.getDefaultUom();
+
+            ProductMeasurement measurement = null;
+            if(productNode.has("measurement")){
+
+                JsonNode measurementNode = productNode.get("measurement");
+
+                ArrayList<String> list = new ArrayList<String>();
+                list.add(relativeId);
+                Map<String, ProductMeasurement> productMeasByRelativeIds = measurementService.getProductMeasByRelativeIds(list);
+
+
+                if(!productMeasByRelativeIds.containsKey(relativeId)){
+
+                    // measurement is not existed, create it.
+                    measurement = new ProductMeasurement();
+                    measurement.setProductId(productMeta.getId())
+                        .setMeasurement(Float.parseFloat(measurementNode.get("measure").asText()))
+                        .setAnotherBarcode(measurementNode.has("barcode") ? measurementNode.get("barcode").asText() : null)
+                        .setSalesChannel(ProductUOM.LAYER)
+                        .setUOM_name(measurementNode.get("uom").asText());
+
+                    ProductMeasurement.valid(measurement);
+
+                    measurementService.addNewMeasurementToProduct(productMeta, measurement);
+                }
+            }
+        }
+        productService.update(productMeta);
     } 
 
     @PutMapping(path = "/increaseFrequently", consumes = "application/json")

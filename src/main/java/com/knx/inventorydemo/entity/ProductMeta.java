@@ -9,7 +9,6 @@ public class ProductMeta {
 
     // this often references to product barcode
     private String id;
-    
     private String name;
     private Vendor vendor;
     private String defaultUom;
@@ -74,6 +73,9 @@ public class ProductMeta {
     public ProductMeta setName(String name) {
         this.name = name;
         return this;
+    }
+
+    public static boolean valid(ProductMeta productMeta){
     }
 
 }

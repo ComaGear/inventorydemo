@@ -12,13 +12,13 @@ public class ProductMeasurement {
     private String updateRule;
     private String salesChannel;
 
-    public boolean check() {
-        if (UOM_name == null)
-            throw new NullPointerException("ProductMeta's UOM_name is null");
-        if (measurement <= 0)
-            throw new NullPointerException("ProductMeta's measurement is null");
-        return true;
-    }
+    // public boolean check() {
+    //     if (UOM_name == null)
+    //         throw new NullPointerException("ProductMeta's UOM_name is null");
+    //     if (measurement <= 0)
+    //         throw new NullPointerException("ProductMeta's measurement is null");
+    //     return true;
+    // }
 
     public String getSalesChannel() {
         return salesChannel;
@@ -80,6 +80,10 @@ public class ProductMeasurement {
     public ProductMeasurement setUOM_name(String UOM_name) {
         this.UOM_name = UOM_name;
         return this;
+    }
+
+    public static boolean valid(ProductMeasurement productMeasurement){
+        
     }
 
 }
