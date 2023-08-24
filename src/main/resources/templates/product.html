@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.thymeleaf.org">
+    <head>
+        <title>Product Detail</title>
+    </head>
+
+    <body>
+        <div>
+            <form>
+                <label for="id">Product ID :</label>
+                <input  id="id" type="text">
+                <label for="name">Product Name :</label>
+                <input  id="name" type="text">
+                <label for="uom">Default Uom :</label>
+                <input  id="uom" type="text">
+                <div>
+                    <label >Activity:</label>
+                    <label for="yes">Yes</label>
+                    <input id="yes" name="active" type="radio">
+                    <label for="no">No</label>
+                    <input id="no" name="active" type="radio">
+                </div>
+            </form>
+        </div>
+
+        <div id="bottom_section">
+            <button id="create" th:if="${'productMeta' == null}">create</button>
+            <button id="update" th:if="${'productMeta' == null}">update</button>
+            <button id="delete" disabled>delete</button>
+        </div>
+    </body>
+</html>
