@@ -2,6 +2,8 @@ package com.knx.inventorydemo.entity;
 
 public class ProductMeasurement {
 
+    public static final String DEFAULT_UOM = "unit";
+    
     private String productId;
     private float measurement;
     private String relativeId;
