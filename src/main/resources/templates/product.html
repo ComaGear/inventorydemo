@@ -24,11 +24,17 @@
                 </div>
             </div>
             
-            <div id="measurement_section">
-                <div id="measurement_name"></div>
-                <div id="measure"></div>
-                <div id="barcode"></div>
-            </div>
+            <form id="measurement_section">
+                <select id="measurement_list">
+                    <option th:if="${productMeta == null}"></option>
+                    <option>new Measure</option>
+
+                </select>
+                <label for="measurement_name">measurement_name</label>
+                <input id="measurement_name" placeholder="UNIT"></input>
+                <input id="measure" placeholder="1"></input>
+                <input id="barcode"></input>
+            </form>
         </div>
 
         <div id="bottom_section">
