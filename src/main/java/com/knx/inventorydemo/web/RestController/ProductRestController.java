@@ -1,10 +1,12 @@
 package com.knx.inventorydemo.web.RestController;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,9 +36,6 @@ public class ProductRestController {
 
     @Autowired
     MeasurementService measurementService;
-
-    @Autowired
-    JsonMapper mapper;
     
     @GetMapping(path = "/{id}", consumes = "application/json")
     public ProductMeta getProduct(@PathVariable String id){
@@ -63,19 +62,19 @@ public class ProductRestController {
         return productMetaById;
     }
 
-    @PostMapping(path = "/", produces = "application/json")
-    public @ResponseBody void addProduct(@RequestBody(required = true) ObjectNode product){
+    @PostMapping(path = "/", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> addProduct(@RequestBody(required = true) ObjectNode product){
 
         JsonNode productNode = product.get("product");
         ProductMeta productMeta = new ProductMeta();
         productMeta.setId(productNode.get("id").asText())
             .setName(productNode.get("name").asText())
             .setDefaultUom(productNode.has("default_uom") ? productNode.get("default_uom").asText() : ProductMeasurement.DEFAULT_UOM)
-            .setVendor(new Vendor().setName(productNode.get("vendor_name").asText()))
-            .setActivity(productNode.has("active") ? productNode.get("active").asText().equals("true") : false);
+            .setVendor(productNode.has("vendor_name") ?  new Vendor().setName(productNode.get("vendor_name").asText()) : null)
+            .setActivity(productNode.has("activity") ? productNode.get("activity").asBoolean() : false);
 
         ProductMeasurement measurement = null;
-        if(!productNode.get("measurement").isNull()){
+        if(productNode.has("measurement") && !productNode.get("measurement").isNull()){
             measurement = new ProductMeasurement();
             JsonNode measurementNode = productNode.get("measurement");
             measurement.setUOM_name(measurementNode.get("name").asText())
@@ -95,6 +94,7 @@ public class ProductRestController {
         } else {
             productService.addNewProduct(productMeta, measurement);
         }
+        return ResponseEntity.ok("\"create it\"");
     }
 
     @PutMapping(path = "/{id}")

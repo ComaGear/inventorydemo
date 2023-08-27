@@ -3,30 +3,37 @@
 <html xmlns="http://www.thymeleaf.org">
     <head>
         <title>Product Detail</title>
+        <script src="/js/product.js" defer></script>
     </head>
 
     <body>
         <div>
-            <form>
-                <label for="id">Product ID :</label>
-                <input  id="id" type="text">
-                <label for="name">Product Name :</label>
-                <input  id="name" type="text">
-                <label for="uom">Default Uom :</label>
-                <input  id="uom" type="text">
+            <div id="product_section">
+                <label for="product_id">Product ID :</label>
+                <input  id="product_id" type="text">
+                <label for="product_name">Product Name :</label>
+                <input  id="product_name" type="text">
+                <label for="product_uom">Default Uom :</label>
+                <input  id="product_uom" type="text">
                 <div>
-                    <label >Activity:</label>
-                    <label for="yes">Yes</label>
-                    <input id="yes" name="active" type="radio">
+                    <label>Activity:</label>
+                    <label for="active_yes">Yes</label>
+                    <input id="active_yes" name="active" type="radio">
                     <label for="no">No</label>
                     <input id="no" name="active" type="radio">
                 </div>
-            </form>
+            </div>
+            
+            <div id="measurement_section">
+                <div id="measurement_name"></div>
+                <div id="measure"></div>
+                <div id="barcode"></div>
+            </div>
         </div>
 
         <div id="bottom_section">
-            <button id="create" th:if="${'productMeta' == null}">create</button>
-            <button id="update" th:if="${'productMeta' == null}">update</button>
+            <button id="create" th:if="${productMeta == null}">create</button>
+            <button id="update" th:if="${productMeta != null}">update</button>
             <button id="delete" disabled>delete</button>
         </div>
     </body>

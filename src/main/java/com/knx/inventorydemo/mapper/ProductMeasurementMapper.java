@@ -21,7 +21,7 @@ public interface ProductMeasurementMapper {
 
     // public int checkLayerExists(String layer);
 
-    public List<ProductMeasurement> getProductMeasByProductIdWithChannel(String channel, String productId);
+    public List<ProductMeasurement> getProductMeasByProductIdWithChannel(String productId);
 
     public ProductMeasurement getProductMeasByRelativeIdWithChannel(String channel, String relativeId);
 

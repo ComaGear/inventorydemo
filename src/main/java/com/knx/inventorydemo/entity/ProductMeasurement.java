@@ -83,6 +83,8 @@ public class ProductMeasurement {
     }
 
     public static boolean valid(ProductMeasurement productMeasurement){
+        return true;
+        //TODO 
         
     }
 

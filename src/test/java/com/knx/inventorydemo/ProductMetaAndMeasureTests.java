@@ -78,7 +78,7 @@ public class ProductMetaAndMeasureTests {
     public void addOneCustomMeasurement(){
         measurementService.addNewMeasurementToProduct(product, productMeas);
 
-        measurementService.findAllCustomMeasurementByProductId(productMeas.getSalesChannel(), product.getId());
+        measurementService.findAllCustomMeasurementByProductId(product.getId());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class ProductMetaAndMeasureTests {
         productMeas.setRelativeId(newSku);
 
         assertEquals(productMeas.getRelativeId() + "-a", measurementService.findAllCustomMeasurementByProductId(
-            productMeas.getSalesChannel(), productMeas.getProductId()).get(0).getRelativeId());
+            productMeas.getProductId()).get(0).getRelativeId());
     }
 
     // @Test

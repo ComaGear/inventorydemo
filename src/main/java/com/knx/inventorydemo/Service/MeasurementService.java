@@ -31,18 +31,18 @@ public class MeasurementService  {
         return false;
     }
 
-    public List<ProductMeasurement> findAllCustomMeasurementByProductId(String layer, String id) {
+    public List<ProductMeasurement> findAllCustomMeasurementByProductId(String id) {
         if(id == null || id.equals("")) throw new NullPointerException("provided id is null");
         
-        List<ProductMeasurement> productMeasList = productMeasurementMapper.getProductMeasByProductIdWithChannel(layer, id);
+        List<ProductMeasurement> productMeasList = productMeasurementMapper.getProductMeasByProductIdWithChannel(id);
 
         return productMeasList;
     }
 
-    public List<ProductMeasurement> findAllCustomMeasurementByProductId(String id) {
-        String layer = ProductUOM.LAYER;
-        return findAllCustomMeasurementByProductId(layer, id);
-    }
+    // public List<ProductMeasurement> findAllCustomMeasurementByProductId(String id) {
+    //     String layer = ProductUOM.LAYER;
+    //     return findAllCustomMeasurementByProductId(layer, id);
+    // }
 
     public Map<String, ProductMeasurement> getProductMeasByRelativeIdWithChannel(List<String> relativeIds, String channel) {
         if(relativeIds.isEmpty()) throw new IllegalArgumentException("relativeIds is empty");
