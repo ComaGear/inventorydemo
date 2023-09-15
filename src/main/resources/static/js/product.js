@@ -61,10 +61,15 @@ measure_edit.addEventListener("click", (e)=>{
     let dialog = document.querySelector("#measure_edit_dialog");
     dialog.showModal();
     // dialog.setAttribute("style", "display:block");
-    
+
     let measure_dialog_close = document.querySelector("#measure_dialog_close");
     measure_dialog_close.addEventListener("click", (e)=>{
         dialog.close();
+    })
+
+    dialog.addEventListener("close", (e)=>{
+        edit_dialog_uom_name.disabled = false;
+        edit_measure_relative_id.disabled = false;
     })
 
     let measure_dialog_save = document.querySelector("#measure_dialog_save");
@@ -82,6 +87,25 @@ measure_edit.addEventListener("click", (e)=>{
     edit_dialog_measure_size.value = measure_size.innerHTML;
     let edit_dialog_barcode = document.querySelector("#edit_dialog_barcode");
     edit_dialog_barcode.value = barcode.innerHTML;
+    let edit_measure_relative_id = document.querySelector("#edit_measure_relative_id");
+    edit_measure_relative_id.value = relative_id.innerHTML;
+
+    // only one of them available to edit.
+    if(edit_dialog_uom_name.value != ""){
+        edit_measure_relative_id.disabled = true;
+        
+    } else if(edit_measure_relative_id.value != ""){
+        // because uom is null, relative id able to set own value.
+        edit_dialog_uom_name.disabled = true;
+    }
+    edit_dialog_uom_name.addEventListener("change", (e)=>{
+        edit_measure_relative_id.value = `${product_id.value}-${edit_dialog_uom_name.value}`;
+        edit_measure_relative_id.disabled=true;
+    })
+    edit_measure_relative_id.addEventListener("change", (e)=>{
+        edit_dialog_uom_name.disabled=true;
+    })
+
 });
 
 // function displayMeasureEditPage(measure_element, measure_object){

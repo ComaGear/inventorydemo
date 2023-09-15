@@ -34,9 +34,9 @@
                     <div class="label">Barcode</div>
                 </div>
                 <div id="measure_product-UNIT" class="row measure">
-                    <div class="measure_uom_name">UNIT</div>
+                    <div class="measure_uom_name"></div>
                     <div class="measure_size">1</div>
-                    <div class="relative_id">9971-UNIT</div>
+                    <div class="relative_id"></div>
                     <div class="barcode"></div>
                     <button class="measure_edit tiny_button">edit</button>
                 </div>
@@ -51,12 +51,19 @@
         <dialog id="measure_edit_dialog">
             <label class="label row">product_id</label>
             <input id="edit_dialog_product_id" class="row" disabled value=""> 
+
+            <!-- uom will unable edit since it have sales record.
+            relative_id also unable edit have sales record.
+                uom and relative id only one of them able to edit. -->
+            
             <label for="edit_dialog_uom_name" class="label row">Measure UOM</label>
             <input id="edit_dialog_uom_name" class="row" value="">
             <label for="edit_dialog_measure_size" class="label row">Measure Size</label>
             <input id="edit_dialog_measure_size" class="row" value="">
             <label for="edit_dialog_barcode" class="label row">Barcode</label>
             <input id="edit_dialog_barcode" class="row" value="">
+            <label class="label row" for="edit_measure_relative_id">Relative Id</label>
+            <input id="edit_measure_relative_id" class="row" value="">
 
             <button type="button" id="measure_dialog_save" class="right">save</button>
             <button type="button" id="measure_dialog_close" class="right">cancel</button>
