@@ -4,43 +4,65 @@
     <head>
         <title>Product Detail</title>
         <script src="/js/product.js" defer></script>
+        <link rel="stylesheet" href="/css/product.css">
     </head>
 
     <body>
-        <div>
+        <div id="panel">
             <div id="product_section">
-                <label for="product_id">Product ID :</label>
-                <input  id="product_id" type="text">
-                <label for="product_name">Product Name :</label>
-                <input  id="product_name" type="text">
-                <label for="product_uom">Default Uom :</label>
-                <input  id="product_uom" type="text">
+                <label for="product_id" class="relative label">Product ID :</label>
+                <input  id="product_id" type="text" class="relative row">
+                <label for="product_name" class="relative row label">Product Name :</label>
+                <input  id="product_name" type="text" class="relative row label">
+                <label for="product_uom" class="relative row label">Default Uom :</label>
+                <input  id="product_uom" type="text" class="relative row" label>
                 <div>
-                    <label>Activity:</label>
-                    <label for="active_yes">Yes</label>
+                    <label class="label">Activity:</label>
                     <input id="active_yes" name="active" type="radio">
-                    <label for="no">No</label>
+                    <label for="active_yes" class="label">Yes</label>
                     <input id="no" name="active" type="radio">
+                    <label for="no" class="label">No</label>
                 </div>
             </div>
             
-            <form id="measurement_section">
-                <select id="measurement_list">
-                    <option th:if="${productMeta == null}"></option>
-                    <option>new Measure</option>
+            <div id="measurement_list">
+                <button id="create_measure_button">create new measurement</button>
+                <div id="measure_list_header" class="measure">
+                    <div class="label">Measurement UOM</div>
+                    <div class="label">Measure Size</div>
+                    <div class="label">Relative Id</div>
+                    <div class="label">Barcode</div>
+                </div>
+                <div id="measure_product-UNIT" class="row measure">
+                    <div class="measure_uom_name">UNIT</div>
+                    <div class="measure_size">1</div>
+                    <div class="relative_id">9971-UNIT</div>
+                    <div class="barcode"></div>
+                    <button class="measure_edit tiny_button">edit</button>
+                </div>
+            </div>
 
-                </select>
-                <label for="measurement_name">measurement_name</label>
-                <input id="measurement_name" placeholder="UNIT"></input>
-                <input id="measure" placeholder="1"></input>
-                <input id="barcode"></input>
-            </form>
+            <div id="bottom_section">
+                <button id="update" class="right" th:if="${productMeta != null}">update</button>
+                <button id="create" class="right" th:if="${productMeta == null}">create</button>
+                <button id="delete" class="right" disabled>delete</button>
+            </div>
         </div>
+        <dialog id="measure_edit_dialog">
+            <label class="label row">product_id</label>
+            <input id="edit_dialog_product_id" class="row" disabled value=""> 
+            <label for="edit_dialog_uom_name" class="label row">Measure UOM</label>
+            <input id="edit_dialog_uom_name" class="row" value="">
+            <label for="edit_dialog_measure_size" class="label row">Measure Size</label>
+            <input id="edit_dialog_measure_size" class="row" value="">
+            <label for="edit_dialog_barcode" class="label row">Barcode</label>
+            <input id="edit_dialog_barcode" class="row" value="">
 
-        <div id="bottom_section">
-            <button id="create" th:if="${productMeta == null}">create</button>
-            <button id="update" th:if="${productMeta != null}">update</button>
-            <button id="delete" disabled>delete</button>
-        </div>
+            <button type="button" id="measure_dialog_save" class="right">save</button>
+            <button type="button" id="measure_dialog_close" class="right">cancel</button>
+        </dialog>
+        <!-- <div id="measure_edit_dialog">
+            
+        </div> -->
     </body>
 </html>

@@ -1,0 +1,63 @@
+#panel {
+    width: 70%;
+    border-left: 1px solid rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(0, 0, 0, 0.2);;
+    margin-left: calc(15%);
+}
+
+input {
+    border: 1px solid rgba(0,0,0,0.4);
+    padding: 3px;
+}
+
+.label {
+    color:rgba(0,0,0,0.8)
+}
+
+.relative{
+    position: relative;
+}
+
+.right{
+    float: right;
+}
+
+.row {
+    display: block;
+    min-width: 250px;
+    width: 350px;
+}
+
+.measure{
+    width: 100%;
+}
+
+.measure > *{
+    display: inline-block;
+    width: calc(25% - 50px/3);
+}   
+
+.tiny_button {
+    width: 50px;
+}
+
+#product_section{
+    min-width: 500px;
+    width: 100%;
+}
+
+#bottom_section {
+    height: 25px;
+}
+
+/* #measure_edit_dialog {
+    display: none;
+    position: fixed;
+    width: 20%;
+    height: 20%;
+    top: 25%;
+    left: 25%;
+    z-index: 2;
+    background-color: white;
+    padding: 10%;
+} */

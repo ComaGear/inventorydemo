@@ -28,7 +28,7 @@ import com.knx.inventorydemo.entity.Vendor;
 import com.knx.inventorydemo.exception.ProductValidationException;
 
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/api/product")
 public class ProductRestController {
 
     @Autowired
