@@ -3,11 +3,17 @@
     border-left: 1px solid rgba(0, 0, 0, 0.2);
     border-right: 1px solid rgba(0, 0, 0, 0.2);;
     margin-left: calc(15%);
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 input {
     border: 1px solid rgba(0,0,0,0.4);
     padding: 3px;
+}
+
+.top_margin{
+    margin-top: 10px;
 }
 
 .label {
@@ -30,6 +36,16 @@ input {
 
 .measure{
     width: 100%;
+}
+
+.measure > .measure_edit{
+    display: none;
+    height: 1.4em;
+    padding: calc(-2px);
+}
+
+.measure:hover > .measure_edit{
+    display: inline;
 }
 
 .measure > *{

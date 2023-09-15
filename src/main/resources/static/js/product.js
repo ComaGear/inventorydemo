@@ -49,9 +49,8 @@ async function createListener(){
     // select_list?
 // }
 
-let measure_edit = document.querySelector(".measure_edit");
-measure_edit.addEventListener("click", (e)=>{
-    const measure_element = measure_edit.parentElement;
+function openDialog(measure_element){
+    // const measure_element = measure_edit.parentElement;
     let product_id = document.querySelector("#product_id");
     let relative_id = measure_element.querySelector(".relative_id");
     let measure_uom_name = measure_element.querySelector(".measure_uom_name");
@@ -105,7 +104,27 @@ measure_edit.addEventListener("click", (e)=>{
     edit_measure_relative_id.addEventListener("change", (e)=>{
         edit_dialog_uom_name.disabled=true;
     })
+}
 
+let create_measure_button = document.querySelector("#create_measure_button")
+create_measure_button.addEventListener("click", (e)=>{
+    let measure_list = document.getElementById("#measurement_list");
+    // let lastNode = measure_list.lastChild; // unable get lastChild, it should create newMeasure by script
+    // let newMeasure = lastNode.cloneNode(true);
+
+    // newMeasure.querySelector(".relative_id").innerHTML = "";
+    // newMeasure.querySelector(".measure_uom_name").innerHTML = "";
+    // newMeasure.querySelector(".measure_size").innerHTML = "";
+    // newMeasure.querySelector(".barcode").innerHTML = "";
+
+    // measure_list.appendChild(newMeasure);
+    // openDialog(newMeasure)
+})
+
+let measure_edit = document.querySelector(".measure_edit");
+measure_edit.addEventListener("click", (e)=>{
+    const measure_element = measure_edit.parentElement;
+    openDialog(measure_element);
 });
 
 // function displayMeasureEditPage(measure_element, measure_object){
