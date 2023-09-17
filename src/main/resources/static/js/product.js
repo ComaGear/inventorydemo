@@ -1,6 +1,11 @@
 // @ts-nocheck
 const currentUrl = window.location.host;
 
+async function updateMeasure(){
+    // TODO handle job about post a new measurement check <option> 'add Meas' is valid to post.
+    // or update some measuremnt with put
+}
+
 async function createListener(){
 
     updateMeasure();
@@ -49,13 +54,17 @@ async function createListener(){
     // select_list?
 // }
 
+let relative_id = null;
+let measure_uom_name = null;
+let measure_size = null;
+let barcode = null;
 function openDialog(measure_element){
     // const measure_element = measure_edit.parentElement;
-    let product_id = document.querySelector("#product_id");
-    let relative_id = measure_element.querySelector(".relative_id");
-    let measure_uom_name = measure_element.querySelector(".measure_uom_name");
-    let measure_size = measure_element.querySelector(".measure_size");
-    let barcode = measure_element.querySelector(".barcode");
+    product_id = document.querySelector("#product_id");
+    relative_id = measure_element.querySelector(".relative_id");
+    measure_uom_name = measure_element.querySelector(".measure_uom_name");
+    measure_size = measure_element.querySelector(".measure_size");
+    barcode = measure_element.querySelector(".barcode");
 
     let dialog = document.querySelector("#measure_edit_dialog");
     dialog.showModal();
@@ -73,9 +82,19 @@ function openDialog(measure_element){
 
     let measure_dialog_save = document.querySelector("#measure_dialog_save");
     measure_dialog_save.addEventListener("click", (e)=>{
-        dialog.close();
+
+        measure_element.id = `measure_${edit_measure_relative_id.value}`;
+
+        relative_id.innerHTML = edit_measure_relative_id.value;
+        measure_uom_name.innerHTML = edit_dialog_uom_name.value;
+        measure_size.innerHTML = edit_dialog_measure_size.value;
+        barcode.innerHTML = edit_dialog_barcode.value;
+
 
         // operation of update measure
+
+        measure_dialog_save.addEventListener("click", null);
+        dialog.close();
     })
 
     let edit_dialog_product_id = document.querySelector("#edit_dialog_product_id");
@@ -106,35 +125,56 @@ function openDialog(measure_element){
     })
 }
 
-let create_measure_button = document.querySelector("#create_measure_button")
-create_measure_button.addEventListener("click", (e)=>{
-    let measure_list = document.getElementById("#measurement_list");
-    // let lastNode = measure_list.lastChild; // unable get lastChild, it should create newMeasure by script
-    // let newMeasure = lastNode.cloneNode(true);
 
-    // newMeasure.querySelector(".relative_id").innerHTML = "";
-    // newMeasure.querySelector(".measure_uom_name").innerHTML = "";
-    // newMeasure.querySelector(".measure_size").innerHTML = "";
-    // newMeasure.querySelector(".barcode").innerHTML = "";
+let measure_edit = document.querySelectorAll(".measure_edit");
 
-    // measure_list.appendChild(newMeasure);
-    // openDialog(newMeasure)
+function handle_measure_edit(edit){
+    openDialog(edit.parentElement);    
+}
+measure_edit.forEach(edit =>{   
+    edit.addEventListener("click", (e) =>{
+        handle_measure_edit(e.target);
+    });
 })
 
-let measure_edit = document.querySelector(".measure_edit");
-measure_edit.addEventListener("click", (e)=>{
-    const measure_element = measure_edit.parentElement;
-    openDialog(measure_element);
-});
+// measure_edit.addEventListener("click", handle_measure_edit(e));
 
-// function displayMeasureEditPage(measure_element, measure_object){
-    
-// }
+let create_measure_button = document.querySelector("#create_measure_button");
+create_measure_button.addEventListener("click", (e)=>{
+    let measure_list = document.querySelector("#measurement_list");
 
-async function updateMeasure(){
-    // TODO handle job about post a new measurement check <option> 'add Meas' is valid to post.
-    // or update some measuremnt with put
-}
+    let newMeasure = document.createElement("div");
+    measure_list.appendChild(newMeasure);
+    newMeasure.className = "row measure";
+
+    let measure_uom_name = document.createElement("div");
+    newMeasure.appendChild(measure_uom_name);
+    measure_uom_name.className = "measure_uom_name";
+
+    let measure_size = document.createElement("div");
+    newMeasure.appendChild(measure_size);
+    measure_size.className = "measure_size";
+
+    let relative_id = document.createElement("div");
+    newMeasure.appendChild(relative_id);
+    relative_id.className = "relative_id";
+
+    let barcode = document.createElement("div");
+    newMeasure.appendChild(barcode);
+    barcode.className = "barcode";
+
+    let measure_edit = document.createElement("button");
+    newMeasure.appendChild(measure_edit);
+    measure_edit.className = "measure_edit tiny_button";
+    measure_edit.textContent = "edit";
+    measure_edit.addEventListener("click", (e)=>{
+        handle_measure_edit(e.target);
+    })
+
+    openDialog(newMeasure);
+})
+
+
 
 let createButton = document.querySelector("button#create");
 createButton?.addEventListener("click", createListener);

@@ -40,8 +40,9 @@ input {
 
 .measure > .measure_edit{
     display: none;
-    height: 1.4em;
+    height: 1.3em;
     padding: calc(-2px);
+    width: 3em;
 }
 
 .measure:hover > .measure_edit{
@@ -50,8 +51,12 @@ input {
 
 .measure > *{
     display: inline-block;
-    width: calc(25% - 50px/3);
-}   
+    width: calc(22%);
+}
+
+.measure:hover > .measure_edit{
+    display: inline;
+}
 
 .tiny_button {
     width: 50px;
@@ -65,15 +70,3 @@ input {
 #bottom_section {
     height: 25px;
 }
-
-/* #measure_edit_dialog {
-    display: none;
-    position: fixed;
-    width: 20%;
-    height: 20%;
-    top: 25%;
-    left: 25%;
-    z-index: 2;
-    background-color: white;
-    padding: 10%;
-} */
