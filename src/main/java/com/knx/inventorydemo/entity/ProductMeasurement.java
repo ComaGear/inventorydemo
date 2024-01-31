@@ -1,12 +1,17 @@
 package com.knx.inventorydemo.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ProductMeasurement {
 
     public static final String DEFAULT_UOM = "unit";
     
+    @JsonProperty("product_id")
     private String productId;
     private float measurement;
+    @JsonProperty("relative_id")
     private String relativeId;
+    @JsonProperty("barcode")
     private String anotherBarcode;
     private String UOM_name;
     private String updateRule;

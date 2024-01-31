@@ -11,11 +11,14 @@
         <div id="panel">
             <div id="product_section">
                 <label for="product_id" class="relative label">Product ID :</label>
-                <input  id="product_id" type="text" class="relative row">
+                <input id="product_id" type="text" class="relative row">
+                <p class="tips">filling product id</p>
                 <label for="product_name" class="relative row label">Product Name :</label>
                 <input  id="product_name" type="text" class="relative row label">
-                <label for="product_uom" class="relative row label">Default Uom :</label>
-                <input  id="product_uom" type="text" class="relative row" label>
+                <label for="product_default_relative_uom" class="relative row label">Default Relative UOM :</label>
+                <select id="product_default_relative_uom" type="text" class="relative row">
+                    <!-- option here -->
+                </select>
                 <div>
                     <label class="label">Activity:</label>
                     <input id="active_yes" name="active" type="radio">
@@ -24,29 +27,15 @@
                     <label for="no" class="label">No</label>
                 </div>
             </div>
-            
-            <div id="measurement_list" class="top_margin">
-                <button id="create_measure_button">create new measurement</button>
-                <div id="measure_list_header" class="measure">
+                
+            <button id="create_measure_button" class="top_margin">create new measurement</button>
+                <div id="measure_list_header" class="row measure">
                     <div class="label">Measurement UOM</div>
                     <div class="label">Measure Size</div>
                     <div class="label">Relative Id</div>
                     <div class="label">Barcode</div>
                 </div>
-                <div id="measure_product-UNIT" class="row measure">
-                    <div class="measure_uom_name">UNIT</div>
-                    <div class="measure_size">1</div>
-                    <div class="relative_id">9771-UNIT</div>
-                    <div class="barcode"></div>
-                    <button class="measure_edit tiny_button">edit</button>
-                </div>
-                <div id="measure_product-UNIT" class="row measure">
-                    <div class="measure_uom_name">UNIT</div>
-                    <div class="measure_size">1</div>
-                    <div class="relative_id">9771-UNIT</div>
-                    <div class="barcode"></div>
-                    <button class="measure_edit tiny_button">edit</button>
-                </div>
+            <div id="measurement_list" class="">
             </div>
 
             <div id="bottom_section">
@@ -66,7 +55,7 @@
             <label for="edit_dialog_uom_name" class="label row">Measure UOM</label>
             <input id="edit_dialog_uom_name" class="row" value="">
             <label for="edit_dialog_measure_size" class="label row">Measure Size</label>
-            <input id="edit_dialog_measure_size" class="row" value="">
+            <input id="edit_dialog_measure_size" class="row" value="" type="number" srcoll>
             <label for="edit_dialog_barcode" class="label row">Barcode</label>
             <input id="edit_dialog_barcode" class="row" value="">
             <label class="label row" for="edit_measure_relative_id">Relative Id</label>

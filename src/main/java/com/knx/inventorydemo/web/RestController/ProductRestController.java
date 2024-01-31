@@ -1,6 +1,7 @@
 package com.knx.inventorydemo.web.RestController;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.tomcat.util.json.JSONParser;
@@ -26,6 +27,7 @@ import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.entity.ProductUOM;
 import com.knx.inventorydemo.entity.Vendor;
 import com.knx.inventorydemo.exception.ProductValidationException;
+import com.knx.inventorydemo.web.RestController.entity.ProductMetaMeasurementsDTO;
 
 @RestController
 @RequestMapping("/api/product")
@@ -63,7 +65,40 @@ public class ProductRestController {
     }
 
     @PostMapping(path = "/", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addProduct(@RequestBody(required = true) ObjectNode product){
+    public ResponseEntity<ProductMetaMeasurementsDTO> createProduct(@RequestBody ProductMetaMeasurementsDTO productMetaMeasurements){
+
+        ProductMeta meta = productMetaMeasurements;
+
+        if(productMetaMeasurements.getMeasurements() == null || productMetaMeasurements.getMeasurements().isEmpty()){
+            productService.addNewProduct(meta);
+            ProductMeta repositoryProductMeta = productService.getProductMetaById(meta.getId());
+            ProductMetaMeasurementsDTO repositoryProductMetaMeasurementDto = new ProductMetaMeasurementsDTO(repositoryProductMeta);
+            List<ProductMeasurement> repositoryMeasurements = measurementService.findAllCustomMeasurementByProductId(repositoryProductMetaMeasurementDto.getId());
+            repositoryProductMetaMeasurementDto.setMeasurements(repositoryMeasurements);
+            
+            return ResponseEntity.ok(repositoryProductMetaMeasurementDto);
+        }
+
+        // getting default relative id set by user.
+        String defaultRelativeUomId = productMetaMeasurements.getDefaultUom();
+        List<ProductMeasurement> measurements = productMetaMeasurements.getMeasurements();
+        ProductMeasurement defaultProductMeasurement = null;
+        for(ProductMeasurement measure : measurements){
+            if(measure.getRelativeId().equals(defaultRelativeUomId)) defaultProductMeasurement = measure;
+        }
+        productService.addNewProduct(meta, defaultProductMeasurement);
+
+
+        ProductMeta repositoryProductMeta = productService.getProductMetaById(meta.getId());
+        ProductMetaMeasurementsDTO repositoryProductMetaMeasurementDto = new ProductMetaMeasurementsDTO(repositoryProductMeta);
+        List<ProductMeasurement> repositoryMeasurements = measurementService.findAllCustomMeasurementByProductId(repositoryProductMetaMeasurementDto.getId());
+        repositoryProductMetaMeasurementDto.setMeasurements(repositoryMeasurements);
+        
+        return ResponseEntity.ok(repositoryProductMetaMeasurementDto);
+    }
+
+    // @PostMapping(path = "/", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ProductMeta> addProduct(@RequestBody(required = true) ObjectNode product){
 
         JsonNode productNode = product.get("product");
         ProductMeta productMeta = new ProductMeta();
@@ -94,7 +129,9 @@ public class ProductRestController {
         } else {
             productService.addNewProduct(productMeta, measurement);
         }
-        return ResponseEntity.ok("\"create it\"");
+        
+        ProductMeta productMetaById = productService.getProductMetaById(productMeta.getId());
+        return ResponseEntity.ok(productMetaById);
     }
 
     @PutMapping(path = "/{id}")

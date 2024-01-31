@@ -5,11 +5,35 @@
     margin-left: calc(15%);
     padding-left: 5px;
     padding-right: 5px;
+    min-height: 100%;
 }
 
-input {
+input{
     border: 1px solid rgba(0,0,0,0.4);
     padding: 3px;
+    margin: 1px;
+}
+
+select {
+    border: 1px solid rgba(0,0,0,0.2);
+    padding: 3px;
+    margin: 1px;
+}
+
+p.tips {
+    display: none;
+    margin-left: 0.5rem;
+    color :lightcoral;
+}
+
+input:invalid {
+    border: 2px solid red; 
+    padding: 3px;
+    margin: 0;
+}
+
+input:invalid + p.tips {
+    display: inline;
 }
 
 .top_margin{
@@ -52,10 +76,6 @@ input {
 .measure > *{
     display: inline-block;
     width: calc(22%);
-}
-
-.measure:hover > .measure_edit{
-    display: inline;
 }
 
 .tiny_button {

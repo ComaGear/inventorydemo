@@ -6,25 +6,43 @@ async function updateMeasure(){
     // or update some measuremnt with put
 }
 
-async function createListener(){
-
-    updateMeasure();
+async function productCreate(){
 
     let product_id = document.querySelector("#product_id")?.value;
     let product_name = document.querySelector("#product_name")?.value;
-    let product_default_uom = document.querySelector("#product_uom")?.value;
+    let product_default_relative_uom = document.querySelector("#product_default_relative_uom")?.value;
     let active = document.querySelector("#active_yes")?.checked;
 
-    const boby = JSON.stringify({
-        product:{
-            id: product_id,
-            name : product_name,
-            default_uom: product_default_uom,
-            activity: active
-        }
-    });
+    let measurement_list_object = [];
 
-    const url = "http://" + currentUrl + "/product/";
+    if(document.querySelector("#measurement_list").hasChildNodes){
+        let list = document.querySelector("#measurement_list");
+        let measures = list.getElementsByClassName("measure");
+        console.log(measures);
+        for(let i = 0; i < measures.length; i++){
+            let measure = {};
+            measure.product_id = product_id;
+            measure.relative_id = measures[i].querySelector(".relative_id").innerHTML;
+            measure.uom_name = measures[i].querySelector(".measure_uom_name").innerHTML;
+            measure.measurement = measures[i].querySelector(".measure_size").innerHTML;
+            measure.barcode = measures[i].querySelector(".barcode").innerHTML;
+
+            measurement_list_object.push(measure);
+        }
+    }
+
+    let jsonObject = {
+        id: product_id,
+        name : product_name,
+        default_uom: product_default_relative_uom,
+        activity: active,
+        measurements: measurement_list_object
+    };
+
+    const boby = JSON.stringify(jsonObject);
+
+
+    const url = "http://" + currentUrl + "/api/product/";
     const response = await fetch(url, {
         method : "POST",
         body: boby,
@@ -34,79 +52,126 @@ async function createListener(){
     });
 
     response.json().then((data) =>{
+        console.log(boby)
         console.log(data)
+        if(data.id == product_id) updateMeasure(); // update only product succesful create in database.
     });
 }
 
-// async function selectOnChange(){
-//     let select_list = document.querySelector("select#measurement_list");
+let createButton = document.querySelector("button#create");
+createButton?.addEventListener("click", productCreate);
 
-//     if(select_list.options[select_list.selectedIndex].text == "new Measure"){
-//         let measurement_name = document.querySelector("measurement_name");
-//         let measure = document.querySelector("measure");
-//         let barcode = document.querySelector("barcode");
+let to_edit_measurement = null;
+let to_edit_element = null;
 
-//         measurement_name.value = "";
-//         measure.value = "";
-//         barcode.value = "";
-//     }
-    
-    // select_list?
-// }
+let measurement_is_creating = false;
 
-let relative_id = null;
-let measure_uom_name = null;
-let measure_size = null;
-let barcode = null;
-function openDialog(measure_element){
-    // const measure_element = measure_edit.parentElement;
-    product_id = document.querySelector("#product_id");
-    relative_id = measure_element.querySelector(".relative_id");
-    measure_uom_name = measure_element.querySelector(".measure_uom_name");
-    measure_size = measure_element.querySelector(".measure_size");
-    barcode = measure_element.querySelector(".barcode");
+// setup dialog click event;
+function setupDialogSetting(){
 
     let dialog = document.querySelector("#measure_edit_dialog");
-    dialog.showModal();
-    // dialog.setAttribute("style", "display:block");
+
+    let edit_measure_relative_id = document.querySelector("#edit_measure_relative_id");
+    let edit_dialog_uom_name = document.querySelector("#edit_dialog_uom_name");
+    let edit_dialog_measure_size = document.querySelector("#edit_dialog_measure_size");
+    let edit_dialog_barcode = document.querySelector("#edit_dialog_barcode");
 
     let measure_dialog_close = document.querySelector("#measure_dialog_close");
     measure_dialog_close.addEventListener("click", (e)=>{
         dialog.close();
-    })
+    });
 
     dialog.addEventListener("close", (e)=>{
         edit_dialog_uom_name.disabled = false;
         edit_measure_relative_id.disabled = false;
-    })
+        measurement_is_creating = false;
+
+        if(to_edit_element.querySelector(".measure_uom_name").innerHTML == "" 
+            || to_edit_element.querySelector(".measure_size").innerHTML == "") {
+            document.querySelector("#measurement_list").removeChild(to_edit_element);
+        }
+    });
 
     let measure_dialog_save = document.querySelector("#measure_dialog_save");
     measure_dialog_save.addEventListener("click", (e)=>{
 
-        measure_element.id = `measure_${edit_measure_relative_id.value}`;
+        let old_relative_id = to_edit_element.querySelector(".relative_id").innerHTML;
 
-        relative_id.innerHTML = edit_measure_relative_id.value;
-        measure_uom_name.innerHTML = edit_dialog_uom_name.value;
-        measure_size.innerHTML = edit_dialog_measure_size.value;
-        barcode.innerHTML = edit_dialog_barcode.value;
+        to_edit_element.id = `measure_${edit_measure_relative_id.value}`;
 
+        to_edit_element.querySelector(".relative_id").innerHTML = edit_measure_relative_id.value;
+        to_edit_element.querySelector(".measure_uom_name").innerHTML = edit_dialog_uom_name.value;
+        to_edit_element.querySelector(".measure_size").innerHTML = edit_dialog_measure_size.value;
+        to_edit_element.querySelector(".barcode").innerHTML = edit_dialog_barcode.value;
 
-        // operation of update measure
+        if(to_edit_element.querySelector(".measure_uom_name").innerHTML == "" 
+        || to_edit_element.querySelector(".measure_size").innerHTML == "") {
+            alert("measure UOM or Size can't not be blank");
+            edit_dialog_measure_size.required = true;
+            edit_dialog_uom_name.required = true;
+            return;
+        }
 
-        measure_dialog_save.addEventListener("click", null);
+        if(edit_dialog_measure_size.value < 0) {
+            alert("measurement size should greater than zero");
+            return;
+        }
+
+        // operation of update measure !! change to create product updating measure_list
+
+        // update new measurement to default uom select option.
+        
+        if(measurement_is_creating) {
+            insertNewDefaultUomOption(edit_measure_relative_id.value);
+        } else {
+            updateDefaultUomOption(old_relative_id, edit_measure_relative_id.value);
+        }
         dialog.close();
-    })
+    });
+    edit_dialog_uom_name.addEventListener("change", (e)=>{
+        edit_measure_relative_id.value = `${product_id.value}-${edit_dialog_uom_name.value}`;
+        edit_measure_relative_id.disabled=true;
+    });
+    edit_measure_relative_id.addEventListener("change", (e)=>{
+        edit_dialog_uom_name.disabled=true;
+    });
+}
+
+setupDialogSetting();
+
+function openDialog(measure_element){
+
+    let dialog = document.querySelector("#measure_edit_dialog");
+    dialog.showModal();
+
+    to_edit_element = {};
+    to_edit_element = measure_element;
+    to_edit_measurement = {};
+    to_edit_measurement.product_id = document.querySelector("#product_id").value;
+    to_edit_measurement.relative_id = to_edit_element.querySelector(".relative_id").innerHTML;
+    to_edit_measurement.measure_uom_name = to_edit_element.querySelector(".measure_uom_name").innerHTML;
+    to_edit_measurement.measure_size = to_edit_element.querySelector(".measure_size").innerHTML;
+    to_edit_measurement.barcode = to_edit_element.querySelector(".barcode").innerHTML;
+
+    // const measure_element = measure_edit.parentElement;
+    // product_id = document.querySelector("#product_id");
+    // relative_id = measure_element.querySelector(".relative_id");
+    // measure_uom_name = measure_element.querySelector(".measure_uom_name");
+    // measure_size = measure_element.querySelector(".measure_size");
+    // barcode = measure_element.querySelector(".barcode");
+
+    // dialog.setAttribute("style", "display:block");
 
     let edit_dialog_product_id = document.querySelector("#edit_dialog_product_id");
-    edit_dialog_product_id.value = product_id.value;
+    edit_dialog_product_id.value = to_edit_measurement.product_id;
     let edit_dialog_uom_name = document.querySelector("#edit_dialog_uom_name");
-    edit_dialog_uom_name.value = measure_uom_name.innerHTML;
+    edit_dialog_uom_name.value = to_edit_measurement.measure_uom_name;
     let edit_dialog_measure_size = document.querySelector("#edit_dialog_measure_size");
-    edit_dialog_measure_size.value = measure_size.innerHTML;
+    edit_dialog_measure_size.value = to_edit_measurement.measure_size;
     let edit_dialog_barcode = document.querySelector("#edit_dialog_barcode");
-    edit_dialog_barcode.value = barcode.innerHTML;
+    edit_dialog_barcode.value = to_edit_measurement.barcode;
     let edit_measure_relative_id = document.querySelector("#edit_measure_relative_id");
-    edit_measure_relative_id.value = relative_id.innerHTML;
+    edit_measure_relative_id.value = to_edit_measurement.relative_id;
 
     // only one of them available to edit.
     if(edit_dialog_uom_name.value != ""){
@@ -116,13 +181,26 @@ function openDialog(measure_element){
         // because uom is null, relative id able to set own value.
         edit_dialog_uom_name.disabled = true;
     }
-    edit_dialog_uom_name.addEventListener("change", (e)=>{
-        edit_measure_relative_id.value = `${product_id.value}-${edit_dialog_uom_name.value}`;
-        edit_measure_relative_id.disabled=true;
-    })
-    edit_measure_relative_id.addEventListener("change", (e)=>{
-        edit_dialog_uom_name.disabled=true;
-    })
+}
+
+function insertNewDefaultUomOption(relative_id){
+    const default_uom_selection = document.querySelector("#product_default_relative_uom");
+    
+    let option = document.createElement("option");
+    option.id = `option_${relative_id}`;
+    option.value = relative_id;
+    option.innerHTML = relative_id;
+    
+    default_uom_selection.appendChild(option);
+}
+
+function updateDefaultUomOption(old_relative_id, new_relative_id){
+    const default_relative_id_selection = document.querySelector("#product_default_relative_uom");
+    let option = default_relative_id_selection.querySelector(`#option_${old_relative_id}`);
+    option.id = `option_${new_relative_id}`;
+    option.value = new_relative_id;
+    option.innerHTML = new_relative_id;
+    
 }
 
 
@@ -137,14 +215,24 @@ measure_edit.forEach(edit =>{
     });
 })
 
-// measure_edit.addEventListener("click", handle_measure_edit(e));
-
+// create measurement button event handler
 let create_measure_button = document.querySelector("#create_measure_button");
 create_measure_button.addEventListener("click", (e)=>{
-    let measure_list = document.querySelector("#measurement_list");
 
+    // check product id is valid.
+    if(document.querySelector("#product_id").value == ""){
+        alert("please fill product id.");
+        document.querySelector("#product_id").required = true;
+        return;
+    }
+
+    let measure_list = document.querySelector("#measurement_list");
     let newMeasure = document.createElement("div");
-    measure_list.appendChild(newMeasure);
+    if(measure_list.innerHTML == " "){
+        measure_list.innerHTML = newMeasure;
+    } else {
+        measure_list.appendChild(newMeasure);
+    }
     newMeasure.className = "row measure";
 
     let measure_uom_name = document.createElement("div");
@@ -171,13 +259,7 @@ create_measure_button.addEventListener("click", (e)=>{
         handle_measure_edit(e.target);
     })
 
+    measurement_is_creating = true;
+
     openDialog(newMeasure);
 })
-
-
-
-let createButton = document.querySelector("button#create");
-createButton?.addEventListener("click", createListener);
-// let measurement_list = document.querySelector("#measurement_list");
-// measurement_list?.addEventListener("change", selectOnChange);
-
