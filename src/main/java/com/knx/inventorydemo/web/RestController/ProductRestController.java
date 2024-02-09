@@ -98,41 +98,41 @@ public class ProductRestController {
     }
 
     // @PostMapping(path = "/", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ProductMeta> addProduct(@RequestBody(required = true) ObjectNode product){
+    // public ResponseEntity<ProductMeta> addProduct(@RequestBody(required = true) ObjectNode product){
 
-        JsonNode productNode = product.get("product");
-        ProductMeta productMeta = new ProductMeta();
-        productMeta.setId(productNode.get("id").asText())
-            .setName(productNode.get("name").asText())
-            .setDefaultUom(productNode.has("default_uom") ? productNode.get("default_uom").asText() : ProductMeasurement.DEFAULT_UOM)
-            .setVendor(productNode.has("vendor_name") ?  new Vendor().setName(productNode.get("vendor_name").asText()) : null)
-            .setActivity(productNode.has("activity") ? productNode.get("activity").asBoolean() : false);
+    //     JsonNode productNode = product.get("product");
+    //     ProductMeta productMeta = new ProductMeta();
+    //     productMeta.setId(productNode.get("id").asText())
+    //         .setName(productNode.get("name").asText())
+    //         .setDefaultUom(productNode.has("default_uom") ? productNode.get("default_uom").asText() : ProductMeasurement.DEFAULT_UOM)
+    //         .setVendor(productNode.has("vendor_name") ?  new Vendor().setName(productNode.get("vendor_name").asText()) : null)
+    //         .setActivity(productNode.has("activity") ? productNode.get("activity").asBoolean() : false);
 
-        ProductMeasurement measurement = null;
-        if(productNode.has("measurement") && !productNode.get("measurement").isNull()){
-            measurement = new ProductMeasurement();
-            JsonNode measurementNode = productNode.get("measurement");
-            measurement.setUOM_name(measurementNode.get("name").asText())
-                .setProductId(productMeta.getId())
-                .setAnotherBarcode(measurementNode.has("barcode") ? measurementNode.get("barcode").asText() : null)
-                .setMeasurement(Float.parseFloat(measurementNode.get("measure").asText()))
-                .setSalesChannel(ProductUOM.LAYER)
-                .setRelativeId(measurementNode.has("relative_id") ? measurementNode.get("relative_id").asText()
-                     : measurement.getProductId() + "-" + measurement.getUOM_name());
-        }
+    //     ProductMeasurement measurement = null;
+    //     if(productNode.has("measurement") && !productNode.get("measurement").isNull()){
+    //         measurement = new ProductMeasurement();
+    //         JsonNode measurementNode = productNode.get("measurement");
+    //         measurement.setUOM_name(measurementNode.get("name").asText())
+    //             .setProductId(productMeta.getId())
+    //             .setAnotherBarcode(measurementNode.has("barcode") ? measurementNode.get("barcode").asText() : null)
+    //             .setMeasurement(Float.parseFloat(measurementNode.get("measure").asText()))
+    //             .setSalesChannel(ProductUOM.LAYER)
+    //             .setRelativeId(measurementNode.has("relative_id") ? measurementNode.get("relative_id").asText()
+    //                  : measurement.getProductId() + "-" + measurement.getUOM_name());
+    //     }
 
 
-        if(productMeta.getId() == null || productMeta.getId().isEmpty()) throw new ProductValidationException("product id is null", productMeta);
+    //     if(productMeta.getId() == null || productMeta.getId().isEmpty()) throw new ProductValidationException("product id is null", productMeta);
 
-        if(measurement == null){
-            productService.addNewProduct(productMeta);
-        } else {
-            productService.addNewProduct(productMeta, measurement);
-        }
+    //     if(measurement == null){
+    //         productService.addNewProduct(productMeta);
+    //     } else {
+    //         productService.addNewProduct(productMeta, measurement);
+    //     }
         
-        ProductMeta productMetaById = productService.getProductMetaById(productMeta.getId());
-        return ResponseEntity.ok(productMetaById);
-    }
+    //     ProductMeta productMetaById = productService.getProductMetaById(productMeta.getId());
+    //     return ResponseEntity.ok(productMetaById);
+    // }
 
     @PutMapping(path = "/{id}")
     public void updateProduct(@PathVariable String id, @RequestBody(required = true) ObjectNode objectNode){
