@@ -41,7 +41,6 @@ async function productCreate(){
 
     const boby = JSON.stringify(jsonObject);
 
-
     const url = "http://" + currentUrl + "/api/product/";
     const response = await fetch(url, {
         method : "POST",
@@ -52,14 +51,16 @@ async function productCreate(){
     });
 
     response.json().then((data) =>{
-        console.log(boby)
-        console.log(data)
-        if(data.id == product_id) updateMeasure(); // update only product succesful create in database.
+        window.location.replace("http://" + currentUrl + "/product/" + product_id);
     });
 }
 
-let createButton = document.querySelector("button#create");
-createButton?.addEventListener("click", productCreate);
+async function productUpdate(){
+    
+}
+
+// let createButton = document.querySelector("button#create");
+// createButton?.addEventListener("click", productCreate);
 
 let to_edit_measurement = null;
 let to_edit_element = null;

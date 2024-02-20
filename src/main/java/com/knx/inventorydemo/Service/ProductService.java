@@ -37,7 +37,7 @@ public class ProductService {
     public void addNewProduct(ProductMeta productMeta, ProductMeasurement productMeasurement){
 
         if(productMeta.getDefaultUom() == null) {
-            productMeta.setDefaultUom(productMeasurement.getUOM_name());
+            productMeta.setDefaultUom(productMeasurement.getUOM());
         }
         if(productMeta.getId() == null || productMeta.getName() == null) throw new NullPointerException();
 
@@ -57,7 +57,7 @@ public class ProductService {
         addNewProduct(productMeta, new ProductUOM()
             .setRelativeId(productMeta.getId() + "-" + "UNIT")
             .setMeasurement(1f)
-            .setUOM_name("UNIT")
+            .setUOM("UNIT")
             .setProductId(productMeta.getId()
         ));
     }

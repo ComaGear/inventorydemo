@@ -49,7 +49,7 @@ public class StockingPendingMovementTests {
         ProductMeasurement productMeasOriginChannel = new ProductMeasurement();
             productMeasOriginChannel.setProductId(product.getId())
                 .setRelativeId("9667-CTN")
-                .setUOM_name("CTN")
+                .setUOM("CTN")
                 .setSalesChannel(ORIGIN);
 
         multiMovesOrder = new Order()

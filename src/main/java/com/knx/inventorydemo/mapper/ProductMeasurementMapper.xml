@@ -7,7 +7,7 @@
         <id column="relative_id" property="relativeId"/>
         <result column="product_id" property="productId" />
         <result column="measurement" property="measurement"/>
-        <result column="uom_name" property="UOM_name"/>
+        <result column="uom_name" property="UOM"/>
         <result column="layer_update_rule_id" property="updateRule"/>
         <result column="channel" property="salesChannel"/>
         <result column="barcode" property="anotherBarcode"/>
@@ -24,7 +24,7 @@
             <if test="measure.relativeId != null">relative_id = #{measure.relativeId},</if>
             <if test="measure.productId != null">product_id = #{measure.productId},</if>
             <if test="measure.measurement != null">measurement = #{measure.measurement},</if>
-            <if test="measure.UOM_name != null">uom_name = #{measure.UOM_name},</if>
+            <if test="measure.UOM_name != null">uom_name = #{measure.UOM},</if>
             <if test="measure.updateRule != null">layer_update_rule_id = #{measure.updateRule},</if>
             <if test="measure.anotherBarcode != null">barcode = #{measure.anotherBarcode}</if>
         </trim>

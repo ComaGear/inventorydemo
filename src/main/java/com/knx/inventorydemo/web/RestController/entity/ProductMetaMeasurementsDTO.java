@@ -28,7 +28,7 @@ public class ProductMetaMeasurementsDTO extends ProductMeta{
             .append("Measurement Product ID : " + measurements.get(0).getProductId() + ", ")
             .append("Measurement measure Size : " + measurements.get(0).getMeasurement() + ", ")
             .append("Measurement Relative ID : " + measurements.get(0).getRelativeId() + ", ")
-            .append("Measurement UOM Name: " + measurements.get(0).getUOM_name() + ", ")
+            .append("Measurement UOM Name: " + measurements.get(0).getUOM() + ", ")
             .append("Measurement Barcode : " + measurements.get(0).getAnotherBarcode() + ", ")
             .append("Measurement Update Rule : " + measurements.get(0).getUpdateRule() + ", ")
             .toString();

@@ -29,6 +29,8 @@ import com.knx.inventorydemo.entity.Vendor;
 import com.knx.inventorydemo.exception.ProductValidationException;
 import com.knx.inventorydemo.web.RestController.entity.ProductMetaMeasurementsDTO;
 
+import io.micrometer.core.instrument.Measurement;
+
 @RestController
 @RequestMapping("/api/product")
 public class ProductRestController {
@@ -84,6 +86,7 @@ public class ProductRestController {
         List<ProductMeasurement> measurements = productMetaMeasurements.getMeasurements();
         ProductMeasurement defaultProductMeasurement = null;
         for(ProductMeasurement measure : measurements){
+            measure.setSalesChannel(ProductUOM.LAYER); // TODO : temporary fix problem. please looking back design notebook how better improve it.A
             if(measure.getRelativeId().equals(defaultRelativeUomId)) defaultProductMeasurement = measure;
         }
         productService.addNewProduct(meta, defaultProductMeasurement);
@@ -171,7 +174,7 @@ public class ProductRestController {
                         .setMeasurement(Float.parseFloat(measurementNode.get("measure").asText()))
                         .setAnotherBarcode(measurementNode.has("barcode") ? measurementNode.get("barcode").asText() : null)
                         .setSalesChannel(ProductUOM.LAYER)
-                        .setUOM_name(measurementNode.get("uom").asText());
+                        .setUOM(measurementNode.get("uom").asText());
 
                     ProductMeasurement.valid(measurement);
 

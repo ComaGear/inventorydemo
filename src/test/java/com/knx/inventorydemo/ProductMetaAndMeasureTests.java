@@ -52,14 +52,14 @@ public class ProductMetaAndMeasureTests {
             .setProductId(product.getId())
             .setMeasurement(1)
             .setRelativeId("2232001")
-            .setUOM_name(null)
+            .setUOM(null)
             .setSalesChannel("online");
 
         productMeasChild = new ProductMeasurement()
             .setProductId(productChild.getId())
             .setMeasurement(1)
             .setSalesChannel("online")
-            .setUOM_name(null);
+            .setUOM(null);
     }
 
     //TODO: test for update inserted product meta and change product id also change measure's relation

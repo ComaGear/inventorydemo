@@ -11,14 +11,19 @@
         <div id="panel">
             <div id="product_section">
                 <label for="product_id" class="relative label">Product ID :</label>
-                <input id="product_id" type="text" class="relative row">
+                <input id="product_id" type="text" class="relative row" th:if="${productMeasDTO != null}" th:value="${productMeasDTO.id}">
+                <input id="product_id" type="text" class="relative row" th:if="${productMeasDTO == null}" value="">
                 <p class="tips">filling product id</p>
                 <label for="product_name" class="relative row label">Product Name :</label>
-                <input  id="product_name" type="text" class="relative row label">
+                <input  id="product_name" type="text" class="relative row label" th:if="${productMeasDTO != null}" th:value="${productMeasDTO.name}">
+                <input  id="product_name" type="text" class="relative row label" th:if="${productMeasDTO == null}" value="">
                 <label for="product_default_relative_uom" class="relative row label">Default Relative UOM :</label>
-                <select id="product_default_relative_uom" type="text" class="relative row">
+                <select id="product_default_relative_uom" type="text" class="relative row" th:if="${productMeasDTO != null}">
                     <!-- option here -->
+                    <option th:each="meas : ${productMeasDTO.measurements}" th:value="${meas.relativeId}" 
+                    th:text="${meas.relativeId}" th:id="@{option_} + ${meas.relativeId}"></option>
                 </select>
+                <select id="product_default_relative_uom" type="text" class="relative row" th:if="${productMeasDTO == null}"></select>
                 <div>
                     <label class="label">Activity:</label>
                     <input id="active_yes" name="active" type="radio">
@@ -35,12 +40,21 @@
                     <div class="label">Relative Id</div>
                     <div class="label">Barcode</div>
                 </div>
-            <div id="measurement_list" class="">
+            <div id="measurement_list" class="" th:if="${productMeasDTO != null}">
+                <div class="row measure" th:each="meas : ${productMeasDTO.measurements}">
+                    <div class="measure_uom_name" th:text="${meas.measurement}"></div>
+                    <div class="measure_size" th:text="${meas.UOM}"></div>
+                    <div class="relative_id" th:text="${meas.relativeId}"></div>
+                    <div class="barcode" th:text="${meas.anotherBarcode}"></div>
+                    <button class="measure_edit tiny_button">edit</button>
+                </div>
+            </div>
+            <div id="measurement_list" class="" th:if="${productMeasDTO == null}">
             </div>
 
             <div id="bottom_section">
-                <button id="update" class="right" th:if="${productMeta != null}">update</button>
-                <button id="create" class="right" th:if="${productMeta == null}">create</button>
+                <button id="update" class="right" th:if="${productMeasDTO != null}" onclick="productUpdate()">update</button>
+                <button id="create" class="right" th:if="${productMeasDTO == null}" onclick="productCreate()">create</button>
                 <button id="delete" class="right" disabled>delete</button>
             </div>
         </div>

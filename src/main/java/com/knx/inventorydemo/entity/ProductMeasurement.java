@@ -13,7 +13,7 @@ public class ProductMeasurement {
     private String relativeId;
     @JsonProperty("barcode")
     private String anotherBarcode;
-    private String UOM_name;
+    private String UOM;
     private String updateRule;
     private String salesChannel;
 
@@ -78,12 +78,12 @@ public class ProductMeasurement {
         return this;
     }
 
-    public String getUOM_name() {
-        return UOM_name;
+    public String getUOM() {
+        return UOM;
     }
 
-    public ProductMeasurement setUOM_name(String UOM_name) {
-        this.UOM_name = UOM_name;
+    public ProductMeasurement setUOM(String UOM_name) {
+        this.UOM = UOM_name;
         return this;
     }
 
