@@ -1,4 +1,4 @@
-package com.knx.inventorydemo.web.RestController.entity;
+package com.knx.inventorydemo.web.restController.entity;
 
 import java.util.List;
 

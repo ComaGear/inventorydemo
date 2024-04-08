@@ -59,6 +59,8 @@ async function productUpdate(){
     
 }
 
+
+
 // let createButton = document.querySelector("button#create");
 // createButton?.addEventListener("click", productCreate);
 

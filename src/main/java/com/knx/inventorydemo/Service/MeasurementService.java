@@ -228,7 +228,6 @@ public class MeasurementService  {
 
             ProductMeasurement measurement = new ProductMeasurement();
             measurement.setSalesChannel(layer)
-                .setRelativeId(relativeId)
                 .setUpdateRule(updateRule);
             productMeasurementMapper.updateMeasureTo(layer, measurement, measurement.getRelativeId());
 
@@ -240,8 +239,8 @@ public class MeasurementService  {
         }
     }
 
-    private void updateByRelativeId(ProductMeasurement productMeas) {
-        productMeasurementMapper.updateMeasureTo(productMeas.getSalesChannel(), productMeas, productMeas.getRelativeId());
+    public void updateByRelativeId(ProductMeasurement productMeas, String relativeId) {
+        productMeasurementMapper.updateMeasureTo(productMeas.getSalesChannel(), productMeas, relativeId);
     }
 
     public List<String> lookupMeasurementExistence(List<String> relativeIds) {

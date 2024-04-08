@@ -1,4 +1,4 @@
-package com.knx.inventorydemo.web.RestController;
+package com.knx.inventorydemo.web.restController;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

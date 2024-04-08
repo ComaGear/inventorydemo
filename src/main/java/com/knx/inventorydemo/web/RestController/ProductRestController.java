@@ -1,4 +1,4 @@
-package com.knx.inventorydemo.web.RestController;
+package com.knx.inventorydemo.web.restController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.entity.ProductUOM;
 import com.knx.inventorydemo.entity.Vendor;
 import com.knx.inventorydemo.exception.ProductValidationException;
-import com.knx.inventorydemo.web.RestController.entity.ProductMetaMeasurementsDTO;
+import com.knx.inventorydemo.web.restController.entity.ProductMetaMeasurementsDTO;
 
 import io.micrometer.core.instrument.Measurement;
 
