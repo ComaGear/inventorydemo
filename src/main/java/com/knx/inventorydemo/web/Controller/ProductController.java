@@ -64,52 +64,52 @@ public class ProductController {
         return "product";
     }
 
-    @PutMapping(path = "/{id}")
-    public RedirectView updateProduct(@PathVariable String id, @RequestBody ProductMetaMeasurementsDTO productMetaMeasurementsDTO){
+    // @PutMapping(path = "/{id}")
+    // public RedirectView updateProduct(@PathVariable String id, @RequestBody ProductMetaMeasurementsDTO productMetaMeasurementsDTO){
 
-        ProductMeta meta = productMetaMeasurementsDTO;
-        productService.update(meta);
+    //     ProductMeta meta = productMetaMeasurementsDTO;
+    //     productService.update(meta);
 
-        List<ProductMeasurement> measurements = productMetaMeasurementsDTO.getMeasurements();
-        for(ProductMeasurement measure : measurements){
-            measurementService.updateByRelativeId(measure, measure.getRelativeId());
-        }
+    //     List<ProductMeasurement> measurements = productMetaMeasurementsDTO.getMeasurements();
+    //     for(ProductMeasurement measure : measurements){
+    //         measurementService.updateByRelativeId(measure, measure.getRelativeId());
+    //     }
 
-        return new RedirectView("product/" + meta.getId());
-    }
+    //     return new RedirectView("product/" + meta.getId());
+    // }
 
-    @PostMapping(path = "/")
-    public RedirectView createProduct(@RequestBody ProductMetaMeasurementsDTO productMetaMeasurements){
+    // @PostMapping(path = "/")
+    // public RedirectView createProduct(@RequestBody ProductMetaMeasurementsDTO productMetaMeasurements){
 
-        ProductMeta meta = productMetaMeasurements;
+    //     ProductMeta meta = productMetaMeasurements;
 
-        if(productMetaMeasurements.getMeasurements() == null || productMetaMeasurements.getMeasurements().isEmpty()){
-            productService.addNewProduct(meta);
-            ProductMeta repositoryProductMeta = productService.getProductMetaById(meta.getId());
-            ProductMetaMeasurementsDTO repositoryProductMetaMeasurementDto = new ProductMetaMeasurementsDTO(repositoryProductMeta);
-            List<ProductMeasurement> repositoryMeasurements = measurementService.findAllCustomMeasurementByProductId(repositoryProductMetaMeasurementDto.getId());
-            repositoryProductMetaMeasurementDto.setMeasurements(repositoryMeasurements);
+    //     if(productMetaMeasurements.getMeasurements() == null || productMetaMeasurements.getMeasurements().isEmpty()){
+    //         productService.addNewProduct(meta);
+    //         ProductMeta repositoryProductMeta = productService.getProductMetaById(meta.getId());
+    //         ProductMetaMeasurementsDTO repositoryProductMetaMeasurementDto = new ProductMetaMeasurementsDTO(repositoryProductMeta);
+    //         List<ProductMeasurement> repositoryMeasurements = measurementService.findAllCustomMeasurementByProductId(repositoryProductMetaMeasurementDto.getId());
+    //         repositoryProductMetaMeasurementDto.setMeasurements(repositoryMeasurements);
             
-            return new RedirectView("product/" + meta.getId());
-        }
+    //         return new RedirectView("product/" + meta.getId());
+    //     }
 
-        // getting default relative id set by user.
-        String defaultRelativeUomId = productMetaMeasurements.getDefaultUom();
-        List<ProductMeasurement> measurements = productMetaMeasurements.getMeasurements();
-        ProductMeasurement defaultProductMeasurement = null;
-        for(ProductMeasurement measure : measurements){
-            measure.setSalesChannel(ProductUOM.LAYER); // TODO : temporary fix problem. please looking back design notebook how better improve it.A
-            if(measure.getRelativeId().equals(defaultRelativeUomId)) defaultProductMeasurement = measure;
-        }
-        productService.addNewProduct(meta, defaultProductMeasurement);
+    //     // getting default relative id set by user.
+    //     String defaultRelativeUomId = productMetaMeasurements.getDefaultUom();
+    //     List<ProductMeasurement> measurements = productMetaMeasurements.getMeasurements();
+    //     ProductMeasurement defaultProductMeasurement = null;
+    //     for(ProductMeasurement measure : measurements){
+    //         measure.setSalesChannel(ProductUOM.LAYER); // TODO : temporary fix problem. please looking back design notebook how better improve it.A
+    //         if(measure.getRelativeId().equals(defaultRelativeUomId)) defaultProductMeasurement = measure;
+    //     }
+    //     productService.addNewProduct(meta, defaultProductMeasurement);
 
-        ProductMeta repositoryProductMeta = productService.getProductMetaById(meta.getId());
-        ProductMetaMeasurementsDTO repositoryProductMetaMeasurementDto = new ProductMetaMeasurementsDTO(repositoryProductMeta);
-        List<ProductMeasurement> repositoryMeasurements = measurementService.findAllCustomMeasurementByProductId(repositoryProductMetaMeasurementDto.getId());
-        repositoryProductMetaMeasurementDto.setMeasurements(repositoryMeasurements);
+    //     ProductMeta repositoryProductMeta = productService.getProductMetaById(meta.getId());
+    //     ProductMetaMeasurementsDTO repositoryProductMetaMeasurementDto = new ProductMetaMeasurementsDTO(repositoryProductMeta);
+    //     List<ProductMeasurement> repositoryMeasurements = measurementService.findAllCustomMeasurementByProductId(repositoryProductMetaMeasurementDto.getId());
+    //     repositoryProductMetaMeasurementDto.setMeasurements(repositoryMeasurements);
         
-        return new RedirectView("product/" + meta.getId());
-    }
+    //     return new RedirectView("product/" + meta.getId());
+    // }
 
     @GetMapping(path = "/create")
     public String createProduct(){

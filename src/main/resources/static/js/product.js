@@ -49,6 +49,10 @@ async function productCreate(){
             "Content-Type": "application/json"
         },
     });
+    if(response.status == 201) console.log("created!");
+    if(response.status == 400) {
+        alert("product id existed!");
+    }
 
     response.json().then((data) =>{
         window.location.replace("http://" + currentUrl + "/product/" + product_id);

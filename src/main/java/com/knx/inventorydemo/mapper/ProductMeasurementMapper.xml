@@ -15,7 +15,7 @@
 
     <insert id="addMeasureTo">
         insert into product_measurement (relative_id, product_id, measurement, uom_name, layer_update_rule_id, channel, barcode)
-        values (#{measure.relativeId}, #{measure.productId}, #{measure.measurement}, #{measure.UOM_name}, #{measure.updateRule}, #{channel}, #{measure.anotherBarcode})
+        values (#{measure.relativeId}, #{measure.productId}, #{measure.measurement}, #{measure.UOM}, #{measure.updateRule}, #{channel}, #{measure.anotherBarcode})
     </insert>
 
     <update id="updateMeasureTo">

@@ -58,5 +58,9 @@ public interface ProductMovementMapper {
 
     public int bulkRemoveMoveIns(List<StockMoveIn> toDeleteMoveIns);
 
+    public List<String> bulkCheckMoveOutByRelativeId(List<String> relativeIds);
+
+    public List<String> bulkGetMoveOutByRelativeId(List<String> relativeIds);
+
     public void init();
 }

@@ -250,6 +250,22 @@
         </foreach>
     </delete>
 
+    <select id="bulkGetMoveOutByRelativeId" parameterType="java.util.List" resultType="java.util.List">
+        select relative_id from product_movement
+        where relative_id in
+        <foreach collection="relativeIds" index="index" item="relativeId" open="(" close=")" separator=",">
+            #{relativeId}
+        </foreach>
+    </select>
+
+    <select id="bulkCheckMoveOutByRelativeId" parameterType="java.util.List" resultType="java.util.List">
+        select distinct relative_id from product_movement
+        where relative_id in
+        <foreach collection="relativeIds" index="index" item="relativeId" open="(" close=")" separator=",">
+            #{relativeId}
+        </foreach>
+    </select>
+
     <insert id="init">
         create table if not exists product_movement (
             relative_id varchar(20) not null,
