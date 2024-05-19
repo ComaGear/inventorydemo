@@ -15,6 +15,7 @@ import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,29 +48,40 @@ public class ProductRestController {
 
     @Autowired
     StockMovementService stockMovementService;
+
+    @GetMapping(path = "/list")
+    public String getProductList(Model model){
+        
+        List<ProductMeta> allProductMeta = productService.getAllProductMeta();
+        List<ProductMetaMeasurementsDTO> dtos = new ArrayList<ProductMetaMeasurementsDTO>();
+        for(ProductMeta meta : allProductMeta){
+            dtos.add(new ProductMetaMeasurementsDTO(meta));
+        }
+        
+        model.addAttribute("products", allProductMeta);
+            
+        return "productList";
+    }
     
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity getProduct(@PathVariable String id){
 
-        // ObjectNode node = mapper.createObjectNode();
-
-        // HashMap<String, ProductMeta> hashMap = new HashMap<String, ProductMeta>();
-
-        // hashMap.put("9971", new ProductMeta().setId("9971").setName("Apollo Cake Chocolate 24pcs"));
-        // hashMap.put("9972", new ProductMeta().setId("9972").setName("Apollo Cake Original 24pcs"));
-        // hashMap.put("8891", new ProductMeta().setId("8891").setName("Nabati Strawberry"));
-        // hashMap.put("9991", new ProductMeta().setId("9991").setName("No30gg Star 60pcs"));
-
-        // HashMap<String, String> returnMap = new HashMap<String, String>();
-        
-        // if(hashMap.containsKey(id)) {
-        //     returnMap.put("id", hashMap.get(id).getId());
-        //     returnMap.put("name", hashMap.get(id).getName());
-        // }
-
-        // return !returnMap.isEmpty() ? returnMap : null;
-
         ProductMeta productMetaById = productService.getProductMetaById(id);
+
+        if(productMetaById == null) {
+            JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("error_name", "product not exist");
+                    jsonObject.put("error", "NoSuchProduct");
+                    jsonObject.put("NoSuchProduct_Id", id);
+                    
+                } catch (JSONException e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getCause());
+                }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonObject.toString());
+        }
+
         List<ProductMeasurement> measurements = measurementService.findAllCustomMeasurementByProductId(productMetaById.getId());
         ProductMetaMeasurementsDTO productMetaMeasurementsDTO = new ProductMetaMeasurementsDTO(productMetaById);
         productMetaMeasurementsDTO.setMeasurements(measurements);
@@ -245,7 +257,14 @@ public class ProductRestController {
         }
 
         productService.delete(repositoryProductMeta);
-
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("message", "product delete success");
+            
+        } catch (JSONException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getCause());
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(jsonObject.toString());
     }
 
 

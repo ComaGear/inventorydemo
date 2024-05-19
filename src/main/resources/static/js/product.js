@@ -6,8 +6,7 @@ async function updateMeasure(){
     // or update some measuremnt with put
 }
 
-async function productCreate(){
-
+function getDetailOfProduct(){
     let product_id = document.querySelector("#product_id")?.value;
     let product_name = document.querySelector("#product_name")?.value;
     let product_default_relative_uom = document.querySelector("#product_default_relative_uom")?.value;
@@ -39,8 +38,13 @@ async function productCreate(){
         measurements: measurement_list_object
     };
 
-    const boby = JSON.stringify(jsonObject);
+    return jsonObject;
+}
 
+async function productCreate(){
+
+    let jsonObject = getDetailOfProduct();
+    const boby = JSON.stringify(jsonObject);
     const url = "http://" + currentUrl + "/api/product/";
     const response = await fetch(url, {
         method : "POST",
@@ -49,18 +53,58 @@ async function productCreate(){
             "Content-Type": "application/json"
         },
     });
-    if(response.status == 201) console.log("created!");
+    if(response.status == 201) {
+        console.log("created!");
+        response.json().then((data) =>{
+            window.location.replace("http://" + currentUrl + "/product/" + product_id);
+        });
+    }
     if(response.status == 400) {
         alert("product id existed!");
     }
 
-    response.json().then((data) =>{
-        window.location.replace("http://" + currentUrl + "/product/" + product_id);
-    });
+    
 }
 
 async function productUpdate(){
+
+    let product_id = document.querySelector("#product_id")?.value; 
+    let jsonObject = getDetailOfProduct();
+    const boby = JSON.stringify(jsonObject);
+    const url = "http://" + currentUrl + "/api/product/" + product_id;
+    const response = await fetch(url, {
+        method : "PUT",
+        body: boby,
+        headers : {
+            "Content-Type": "application/json"
+        },
+    });
+    if(response.status == 201) {
+        console.log("update!");
+        response.json().then((data) =>{
+            window.location.replace("http://" + currentUrl + "/product/" + product_id);
+        });
+    }
+    if(response.status == 400) {
+        alert("product id existed!");
+    }
+}
+
+async function productDelete(){
     
+    let product_id = document.querySelector("#product_id")?.value; 
+    const url = "http://" + currentUrl + "/api/product/" + product_id;
+    const response = await fetch(url, {
+        method : "DELETE",
+        headers : {
+            "Content-type" : "application/json"
+        },
+    });
+
+    if(response.status == 200){
+        console.log("delete success");
+        window.location.replace("http://" + currentUrl + "/product/list");
+    }
 }
 
 
@@ -95,7 +139,7 @@ function setupDialogSetting(){
 
         if(to_edit_element.querySelector(".measure_uom_name").innerHTML == "" 
             || to_edit_element.querySelector(".measure_size").innerHTML == "") {
-            document.querySelector("#measurement_list").removeChild(to_edit_element);
+            // document.querySelector("#measurement_list").removeChild(to_edit_element);
         }
     });
 
@@ -111,7 +155,7 @@ function setupDialogSetting(){
         to_edit_element.querySelector(".measure_size").innerHTML = edit_dialog_measure_size.value;
         to_edit_element.querySelector(".barcode").innerHTML = edit_dialog_barcode.value;
 
-        if(to_edit_element.querySelector(".measure_uom_name").innerHTML == "" 
+        if(to_edit_element.querySelector(".measure_uom_name").innerHTML == "" && to_edit_element.querySelector(".relative_id").innerHTML == ""
         || to_edit_element.querySelector(".measure_size").innerHTML == "") {
             alert("measure UOM or Size can't not be blank");
             edit_dialog_measure_size.required = true;
@@ -129,6 +173,7 @@ function setupDialogSetting(){
         // update new measurement to default uom select option.
         
         if(measurement_is_creating) {
+            console.log("call insert");
             insertNewDefaultUomOption(edit_measure_relative_id.value);
         } else {
             updateDefaultUomOption(old_relative_id, edit_measure_relative_id.value);
@@ -199,6 +244,14 @@ function insertNewDefaultUomOption(relative_id){
     option.innerHTML = relative_id;
     
     default_uom_selection.appendChild(option);
+
+    var links = document.getElementsByTagName("link");
+    for (var cl in links)
+    {
+        var link = links[cl];
+        if (link.rel === "stylesheet")
+            link.href += "";
+    }
 }
 
 function updateDefaultUomOption(old_relative_id, new_relative_id){

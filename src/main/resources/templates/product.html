@@ -42,8 +42,8 @@
                 </div>
             <div id="measurement_list" class="" th:if="${productMeasDTO != null}">
                 <div class="row measure" th:each="meas : ${productMeasDTO.measurements}">
-                    <div class="measure_uom_name" th:text="${meas.measurement}"></div>
-                    <div class="measure_size" th:text="${meas.UOM}"></div>
+                    <div class="measure_uom_name" th:text="${meas.UOM}"></div>
+                    <div class="measure_size" th:text="${meas.measurement}"></div>
                     <div class="relative_id" th:text="${meas.relativeId}"></div>
                     <div class="barcode" th:text="${meas.anotherBarcode}"></div>
                     <button class="measure_edit tiny_button">edit</button>
@@ -55,7 +55,7 @@
             <div id="bottom_section">
                 <button id="update" class="right" th:if="${productMeasDTO != null}" onclick="productUpdate()">update</button>
                 <button id="create" class="right" th:if="${productMeasDTO == null}" onclick="productCreate()">create</button>
-                <button id="delete" class="right" disabled>delete</button>
+                <button id="delete" class="right" th:disabled="${productMeasDTO == null}" onclick="productDelete()">delete</button>
             </div>
         </div>
         <dialog id="measure_edit_dialog">

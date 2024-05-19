@@ -1,0 +1,31 @@
+
+.product_container{
+    width: 50%;
+    margin-left: 25%;
+    margin-right: 25%;
+}
+
+.product_cell {
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    margin-top: 3px;
+}
+
+.product_cell > * {
+    display: inline-block;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.product_id {
+    width: 100px;
+    margin-left: 2px;
+}
+
+.product_name {
+    width: 300px;
+}
+
+.product_edit {
+    float: right;
+    margin-right: 3px;
+}

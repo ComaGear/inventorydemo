@@ -33,7 +33,7 @@ public class ProductController {
     @Autowired
     private MeasurementService measurementService;
 
-    @GetMapping(path = "")
+    @GetMapping(path = "/list")
     public String getProductList(Model model){
         
         List<ProductMeta> allProductMeta = productService.getAllProductMeta();
