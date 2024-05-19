@@ -66,7 +66,7 @@ public class StockingTests {
         productMeta1121.setId("1121").setName("apollo cake").setDefaultUom("UNIT").setActivity(true);
 
         measureCTNfor9971 = new ProductMeasurement();
-        measureCTNfor9971.setProductId(productMeta9971.getId()).setUOM_name("CTN").setMeasurement(6)
+        measureCTNfor9971.setProductId(productMeta9971.getId()).setUOM("CTN").setMeasurement(6)
             .setRelativeId(productMeta9971.getId() + "-" + "CTN").setSalesChannel("MERCHANT");
 
         // unactivity product

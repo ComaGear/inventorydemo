@@ -31,18 +31,18 @@ public class MeasurementService  {
         return false;
     }
 
-    public List<ProductMeasurement> findAllCustomMeasurementByProductId(String layer, String id) {
+    public List<ProductMeasurement> findAllCustomMeasurementByProductId(String id) {
         if(id == null || id.equals("")) throw new NullPointerException("provided id is null");
         
-        List<ProductMeasurement> productMeasList = productMeasurementMapper.getProductMeasByProductIdWithChannel(layer, id);
+        List<ProductMeasurement> productMeasList = productMeasurementMapper.getProductMeasByProductIdWithChannel(id);
 
         return productMeasList;
     }
 
-    public List<ProductMeasurement> findAllCustomMeasurementByProductId(String id) {
-        String layer = ProductUOM.LAYER;
-        return findAllCustomMeasurementByProductId(layer, id);
-    }
+    // public List<ProductMeasurement> findAllCustomMeasurementByProductId(String id) {
+    //     String layer = ProductUOM.LAYER;
+    //     return findAllCustomMeasurementByProductId(layer, id);
+    // }
 
     public Map<String, ProductMeasurement> getProductMeasByRelativeIdWithChannel(List<String> relativeIds, String channel) {
         if(relativeIds.isEmpty()) throw new IllegalArgumentException("relativeIds is empty");
@@ -228,7 +228,6 @@ public class MeasurementService  {
 
             ProductMeasurement measurement = new ProductMeasurement();
             measurement.setSalesChannel(layer)
-                .setRelativeId(relativeId)
                 .setUpdateRule(updateRule);
             productMeasurementMapper.updateMeasureTo(layer, measurement, measurement.getRelativeId());
 
@@ -240,8 +239,8 @@ public class MeasurementService  {
         }
     }
 
-    private void updateByRelativeId(ProductMeasurement productMeas) {
-        productMeasurementMapper.updateMeasureTo(productMeas.getSalesChannel(), productMeas, productMeas.getRelativeId());
+    public void updateByRelativeId(ProductMeasurement productMeas, String relativeId) {
+        productMeasurementMapper.updateMeasureTo(productMeas.getSalesChannel(), productMeas, relativeId);
     }
 
     public List<String> lookupMeasurementExistence(List<String> relativeIds) {

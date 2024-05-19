@@ -1,0 +1,92 @@
+#panel {
+    width: 70%;
+    border-left: 1px solid rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(0, 0, 0, 0.2);;
+    margin-left: calc(15%);
+    padding-left: 5px;
+    padding-right: 5px;
+    min-height: 100%;
+}
+
+input{
+    border: 1px solid rgba(0,0,0,0.4);
+    padding: 3px;
+    margin: 1px;
+}
+
+select {
+    border: 1px solid rgba(0,0,0,0.2);
+    padding: 3px;
+    margin: 1px;
+}
+
+p.tips {
+    display: none;
+    margin-left: 0.5rem;
+    color :lightcoral;
+}
+
+input:invalid {
+    border: 2px solid red; 
+    padding: 3px;
+    margin: 0;
+}
+
+input:invalid + p.tips {
+    display: inline;
+}
+
+.top_margin{
+    margin-top: 10px;
+}
+
+.label {
+    color:rgba(0,0,0,0.8)
+}
+
+.relative{
+    position: relative;
+}
+
+.right{
+    float: right;
+}
+
+.row {
+    display: block;
+    min-width: 250px;
+    width: 350px;
+}
+
+.measure{
+    width: 100%;
+}
+
+.measure > .measure_edit{
+    display: none;
+    height: 1.3em;
+    padding: calc(-2px);
+    width: 3em;
+}
+
+.measure:hover > .measure_edit{
+    display: inline;
+}
+
+.measure > *{
+    display: inline-block;
+    width: calc(22%);
+}
+
+.tiny_button {
+    width: 50px;
+}
+
+#product_section{
+    min-width: 500px;
+    width: 100%;
+}
+
+#bottom_section {
+    height: 25px;
+}

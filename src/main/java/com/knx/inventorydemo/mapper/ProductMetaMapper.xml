@@ -38,10 +38,10 @@
   <update id="update" parameterType="ProductMeta">
     update inventorydemo.product_meta 
       <trim prefix="set" suffixOverrides=",">
-        <if test="name != null">name = #{name}</if>
-        <if test="vendor != null">vendor_name = #{vendor.name}</if>
-        <if test="defaultUom != null">default_uom = #{defaultUom}</if>
-        <if test="activity != null">activity = #{activity}</if>
+        <if test="name != null">name = #{name},</if>
+        <if test="vendor != null">vendor_name = #{vendor.name},</if>
+        <if test="defaultUom != null">default_uom = #{defaultUom},</if>
+        <if test="activity != null">activity = #{activity},</if>
       </trim>
     where id = #{id}
   </update>

@@ -2,7 +2,6 @@ package com.knx.inventorydemo.mapper;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import com.knx.inventorydemo.entity.Order;
 import com.knx.inventorydemo.entity.ProductMovement;
@@ -58,6 +57,10 @@ public interface ProductMovementMapper {
     public int bulkRemoveMoveOuts(List<StockMoveOut> toDeleteMoveOuts);
 
     public int bulkRemoveMoveIns(List<StockMoveIn> toDeleteMoveIns);
+
+    public List<String> bulkCheckMoveOutByRelativeId(List<String> relativeIds);
+
+    public List<String> bulkGetMoveOutByRelativeId(List<String> relativeIds);
 
     public void init();
 }

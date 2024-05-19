@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <link rel="stylesheet" href="/css/productlist.css">
+    <!-- <script>
+        function redirect(id){
+            let host = window.locatoin.host;
+            window.location.href = host + "product/" + id;
+        }
+    </script> -->
+</head>
+<body>
+    <div class="product_container" th:each="product : ${products}">
+        <div class="product_cell">
+            <div class="product_id" th:text="${product.id}"></div>
+            <div class="product_name" th:text="${product.name}"></div>
+            <a class="product_edit" th:href="@{/product/{productId}(productId=${product.id})}">edit</a>
+        </div>
+    </div>
+</body>
+</html>

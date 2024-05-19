@@ -3,31 +3,83 @@
 <html xmlns="http://www.thymeleaf.org">
     <head>
         <title>Product Detail</title>
+        <script src="/js/product.js" defer></script>
+        <link rel="stylesheet" href="/css/product.css">
     </head>
 
     <body>
-        <div>
-            <form>
-                <label for="id">Product ID :</label>
-                <input  id="id" type="text">
-                <label for="name">Product Name :</label>
-                <input  id="name" type="text">
-                <label for="uom">Default Uom :</label>
-                <input  id="uom" type="text">
+        <div id="panel">
+            <div id="product_section">
+                <label for="product_id" class="relative label">Product ID :</label>
+                <input id="product_id" type="text" class="relative row" th:if="${productMeasDTO != null}" th:value="${productMeasDTO.id}">
+                <input id="product_id" type="text" class="relative row" th:if="${productMeasDTO == null}" value="">
+                <p class="tips">filling product id</p>
+                <label for="product_name" class="relative row label">Product Name :</label>
+                <input  id="product_name" type="text" class="relative row label" th:if="${productMeasDTO != null}" th:value="${productMeasDTO.name}">
+                <input  id="product_name" type="text" class="relative row label" th:if="${productMeasDTO == null}" value="">
+                <label for="product_default_relative_uom" class="relative row label">Default Relative UOM :</label>
+                <select id="product_default_relative_uom" type="text" class="relative row" th:if="${productMeasDTO != null}">
+                    <!-- option here -->
+                    <option th:each="meas : ${productMeasDTO.measurements}" th:value="${meas.relativeId}" 
+                    th:text="${meas.relativeId}" th:id="@{option_} + ${meas.relativeId}"></option>
+                </select>
+                <select id="product_default_relative_uom" type="text" class="relative row" th:if="${productMeasDTO == null}"></select>
                 <div>
-                    <label >Activity:</label>
-                    <label for="yes">Yes</label>
-                    <input id="yes" name="active" type="radio">
-                    <label for="no">No</label>
+                    <label class="label">Activity:</label>
+                    <input id="active_yes" name="active" type="radio">
+                    <label for="active_yes" class="label">Yes</label>
                     <input id="no" name="active" type="radio">
+                    <label for="no" class="label">No</label>
                 </div>
-            </form>
-        </div>
+            </div>
+                
+            <button id="create_measure_button" class="top_margin">create new measurement</button>
+                <div id="measure_list_header" class="row measure">
+                    <div class="label">Measurement UOM</div>
+                    <div class="label">Measure Size</div>
+                    <div class="label">Relative Id</div>
+                    <div class="label">Barcode</div>
+                </div>
+            <div id="measurement_list" class="" th:if="${productMeasDTO != null}">
+                <div class="row measure" th:each="meas : ${productMeasDTO.measurements}">
+                    <div class="measure_uom_name" th:text="${meas.UOM}"></div>
+                    <div class="measure_size" th:text="${meas.measurement}"></div>
+                    <div class="relative_id" th:text="${meas.relativeId}"></div>
+                    <div class="barcode" th:text="${meas.anotherBarcode}"></div>
+                    <button class="measure_edit tiny_button">edit</button>
+                </div>
+            </div>
+            <div id="measurement_list" class="" th:if="${productMeasDTO == null}">
+            </div>
 
-        <div id="bottom_section">
-            <button id="create" th:if="${'productMeta' == null}">create</button>
-            <button id="update" th:if="${'productMeta' == null}">update</button>
-            <button id="delete" disabled>delete</button>
+            <div id="bottom_section">
+                <button id="update" class="right" th:if="${productMeasDTO != null}" onclick="productUpdate()">update</button>
+                <button id="create" class="right" th:if="${productMeasDTO == null}" onclick="productCreate()">create</button>
+                <button id="delete" class="right" th:disabled="${productMeasDTO == null}" onclick="productDelete()">delete</button>
+            </div>
         </div>
+        <dialog id="measure_edit_dialog">
+            <label class="label row">product_id</label>
+            <input id="edit_dialog_product_id" class="row" disabled value=""> 
+
+            <!-- uom will unable edit since it have sales record.
+            relative_id also unable edit have sales record.
+                uom and relative id only one of them able to edit. -->
+            
+            <label for="edit_dialog_uom_name" class="label row">Measure UOM</label>
+            <input id="edit_dialog_uom_name" class="row" value="">
+            <label for="edit_dialog_measure_size" class="label row">Measure Size</label>
+            <input id="edit_dialog_measure_size" class="row" value="" type="number" srcoll>
+            <label for="edit_dialog_barcode" class="label row">Barcode</label>
+            <input id="edit_dialog_barcode" class="row" value="">
+            <label class="label row" for="edit_measure_relative_id">Relative Id</label>
+            <input id="edit_measure_relative_id" class="row" value="">
+
+            <button type="button" id="measure_dialog_save" class="right">save</button>
+            <button type="button" id="measure_dialog_close" class="right">cancel</button>
+        </dialog>
+        <!-- <div id="measure_edit_dialog">
+            
+        </div> -->
     </body>
 </html>

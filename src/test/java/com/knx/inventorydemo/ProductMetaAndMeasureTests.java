@@ -52,14 +52,14 @@ public class ProductMetaAndMeasureTests {
             .setProductId(product.getId())
             .setMeasurement(1)
             .setRelativeId("2232001")
-            .setUOM_name(null)
+            .setUOM(null)
             .setSalesChannel("online");
 
         productMeasChild = new ProductMeasurement()
             .setProductId(productChild.getId())
             .setMeasurement(1)
             .setSalesChannel("online")
-            .setUOM_name(null);
+            .setUOM(null);
     }
 
     //TODO: test for update inserted product meta and change product id also change measure's relation
@@ -78,7 +78,7 @@ public class ProductMetaAndMeasureTests {
     public void addOneCustomMeasurement(){
         measurementService.addNewMeasurementToProduct(product, productMeas);
 
-        measurementService.findAllCustomMeasurementByProductId(productMeas.getSalesChannel(), product.getId());
+        measurementService.findAllCustomMeasurementByProductId(product.getId());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class ProductMetaAndMeasureTests {
         productMeas.setRelativeId(newSku);
 
         assertEquals(productMeas.getRelativeId() + "-a", measurementService.findAllCustomMeasurementByProductId(
-            productMeas.getSalesChannel(), productMeas.getProductId()).get(0).getRelativeId());
+            productMeas.getProductId()).get(0).getRelativeId());
     }
 
     // @Test

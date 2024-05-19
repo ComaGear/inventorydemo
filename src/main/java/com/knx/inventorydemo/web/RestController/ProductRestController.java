@@ -1,32 +1,43 @@
-package com.knx.inventorydemo.web.RestController;
+package com.knx.inventorydemo.web.restController;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.configurationprocessor.json.JSONArray;
+import org.springframework.boot.configurationprocessor.json.JSONException;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.knx.inventorydemo.Service.MeasurementService;
 import com.knx.inventorydemo.Service.ProductService;
+import com.knx.inventorydemo.Service.StockMovementService;
+import com.knx.inventorydemo.Service.StockingService;
 import com.knx.inventorydemo.entity.ProductMeasurement;
 import com.knx.inventorydemo.entity.ProductMeta;
 import com.knx.inventorydemo.entity.ProductUOM;
 import com.knx.inventorydemo.entity.Vendor;
-import com.knx.inventorydemo.exception.ProductValidationException;
+import com.knx.inventorydemo.web.exceptions.NoSuchProductException;
+import com.knx.inventorydemo.web.restController.entity.ProductMetaMeasurementsDTO;
 
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/api/product")
 public class ProductRestController {
 
     @Autowired
@@ -36,118 +47,242 @@ public class ProductRestController {
     MeasurementService measurementService;
 
     @Autowired
-    JsonMapper mapper;
-    
-    @GetMapping(path = "/{id}", consumes = "application/json")
-    public ProductMeta getProduct(@PathVariable String id){
+    StockMovementService stockMovementService;
 
-        // ObjectNode node = mapper.createObjectNode();
-
-        // HashMap<String, ProductMeta> hashMap = new HashMap<String, ProductMeta>();
-
-        // hashMap.put("9971", new ProductMeta().setId("9971").setName("Apollo Cake Chocolate 24pcs"));
-        // hashMap.put("9972", new ProductMeta().setId("9972").setName("Apollo Cake Original 24pcs"));
-        // hashMap.put("8891", new ProductMeta().setId("8891").setName("Nabati Strawberry"));
-        // hashMap.put("9991", new ProductMeta().setId("9991").setName("No30gg Star 60pcs"));
-
-        // HashMap<String, String> returnMap = new HashMap<String, String>();
+    @GetMapping(path = "/list")
+    public String getProductList(Model model){
         
-        // if(hashMap.containsKey(id)) {
-        //     returnMap.put("id", hashMap.get(id).getId());
-        //     returnMap.put("name", hashMap.get(id).getName());
-        // }
-
-        // return !returnMap.isEmpty() ? returnMap : null;
+        List<ProductMeta> allProductMeta = productService.getAllProductMeta();
+        List<ProductMetaMeasurementsDTO> dtos = new ArrayList<ProductMetaMeasurementsDTO>();
+        for(ProductMeta meta : allProductMeta){
+            dtos.add(new ProductMetaMeasurementsDTO(meta));
+        }
+        
+        model.addAttribute("products", allProductMeta);
+            
+        return "productList";
+    }
+    
+    @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity getProduct(@PathVariable String id){
 
         ProductMeta productMetaById = productService.getProductMetaById(id);
-        return productMetaById;
+
+        if(productMetaById == null) {
+            JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("error_name", "product not exist");
+                    jsonObject.put("error", "NoSuchProduct");
+                    jsonObject.put("NoSuchProduct_Id", id);
+                    
+                } catch (JSONException e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getCause());
+                }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonObject.toString());
+        }
+
+        List<ProductMeasurement> measurements = measurementService.findAllCustomMeasurementByProductId(productMetaById.getId());
+        ProductMetaMeasurementsDTO productMetaMeasurementsDTO = new ProductMetaMeasurementsDTO(productMetaById);
+        productMetaMeasurementsDTO.setMeasurements(measurements);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(productMetaMeasurementsDTO);
     }
 
-    @PostMapping(path = "/", produces = "application/json")
-    public @ResponseBody void addProduct(@RequestBody(required = true) ObjectNode product){
+    @PostMapping(path = "/", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity createProduct(@RequestBody ProductMetaMeasurementsDTO productMetaMeasurements){
 
-        JsonNode productNode = product.get("product");
-        ProductMeta productMeta = new ProductMeta();
-        productMeta.setId(productNode.get("id").asText())
-            .setName(productNode.get("name").asText())
-            .setDefaultUom(productNode.has("default_uom") ? productNode.get("default_uom").asText() : ProductMeasurement.DEFAULT_UOM)
-            .setVendor(new Vendor().setName(productNode.get("vendor_name").asText()))
-            .setActivity(productNode.has("active") ? productNode.get("active").asText().equals("true") : false);
+        ProductMeta meta = productMetaMeasurements;
 
-        ProductMeasurement measurement = null;
-        if(!productNode.get("measurement").isNull()){
-            measurement = new ProductMeasurement();
-            JsonNode measurementNode = productNode.get("measurement");
-            measurement.setUOM_name(measurementNode.get("name").asText())
-                .setProductId(productMeta.getId())
-                .setAnotherBarcode(measurementNode.has("barcode") ? measurementNode.get("barcode").asText() : null)
-                .setMeasurement(Float.parseFloat(measurementNode.get("measure").asText()))
-                .setSalesChannel(ProductUOM.LAYER)
-                .setRelativeId(measurementNode.has("relative_id") ? measurementNode.get("relative_id").asText()
-                     : measurement.getProductId() + "-" + measurement.getUOM_name());
+        if(productService.getProductMetaById(meta.getId()) != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("product id existed!");
         }
 
-
-        if(productMeta.getId() == null || productMeta.getId().isEmpty()) throw new ProductValidationException("product id is null", productMeta);
-
-        if(measurement == null){
-            productService.addNewProduct(productMeta);
-        } else {
-            productService.addNewProduct(productMeta, measurement);
+        if(productMetaMeasurements.getMeasurements() == null || productMetaMeasurements.getMeasurements().isEmpty()){
+            productService.addNewProduct(meta);
+            ProductMeta repositoryProductMeta = productService.getProductMetaById(meta.getId());
+            ProductMetaMeasurementsDTO repositoryProductMetaMeasurementDto = new ProductMetaMeasurementsDTO(repositoryProductMeta);
+            List<ProductMeasurement> repositoryMeasurements = measurementService.findAllCustomMeasurementByProductId(repositoryProductMetaMeasurementDto.getId());
+            repositoryProductMetaMeasurementDto.setMeasurements(repositoryMeasurements);
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(repositoryProductMetaMeasurementDto);
         }
+
+        // getting default relative id set by user.
+        String defaultRelativeUomId = productMetaMeasurements.getDefaultUom();
+        List<ProductMeasurement> measurements = productMetaMeasurements.getMeasurements();
+        ProductMeasurement defaultProductMeasurement = null;
+        for(ProductMeasurement measure : measurements){
+            measure.setSalesChannel(ProductUOM.LAYER); // TODO : temporary fix problem. please looking back design notebook how better improve it.A
+            if(measure.getRelativeId().equals(defaultRelativeUomId)) defaultProductMeasurement = measure;
+        }
+        productService.addNewProduct(meta, defaultProductMeasurement);
+
+        ProductMeta repositoryProductMeta = productService.getProductMetaById(meta.getId());
+        ProductMetaMeasurementsDTO repositoryProductMetaMeasurementDto = new ProductMetaMeasurementsDTO(repositoryProductMeta);
+        List<ProductMeasurement> repositoryMeasurements = measurementService.findAllCustomMeasurementByProductId(repositoryProductMetaMeasurementDto.getId());
+        repositoryProductMetaMeasurementDto.setMeasurements(repositoryMeasurements);
+        
+        // return ResponseEntity.ok(repositoryProductMetaMeasurementDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(repositoryProductMetaMeasurementDto);
     }
 
     @PutMapping(path = "/{id}")
-    public void updateProduct(@PathVariable String id, @RequestBody(required = true) ObjectNode objectNode){
+    public ResponseEntity updateProduct(@PathVariable String id, @RequestBody ProductMetaMeasurementsDTO productMetaMeasurementsDTO){
         
-        JsonNode productNode = objectNode.get("product");
+        ProductMeta meta = productMetaMeasurementsDTO;
 
-        ProductMeta productMeta = new ProductMeta();
-        productMeta.setId(id)
-            .setName(productNode.get("name").asText())
-            .setActivity(productNode.has("active") ? productNode.get("active").asText().equals("true") : false)
-            .setDefaultUom(productNode.has("default_uom") ? productNode.get("default_uom").asText() : null)
-            .setVendor(productNode.has("vendor") ? new Vendor().setName(productNode.get("vendor").asText()) : null);
+        List<ProductMeasurement> measurements = productMetaMeasurementsDTO.getMeasurements();
+        ArrayList<ProductMeasurement> repositoryMeasurements = new ArrayList<>(measurementService.findAllCustomMeasurementByProductId(id));
+        Comparator<ProductMeasurement> comparator = new Comparator<ProductMeasurement>() {
+            @Override
+            public int compare(ProductMeasurement o1, ProductMeasurement o2) {
+                return o1.getRelativeId().compareTo(o2.getRelativeId());
+            }
+        };
+        measurements.sort(comparator);
+        repositoryMeasurements.sort(comparator);
 
-        ProductMeta.valid(productMeta);
-
-        ProductMeta productMetaById = productService.getProductMetaById(id);
-        if(!productMetaById.getDefaultUom().equals(productMeta.getDefaultUom())){
-
-            String relativeId = productMeta.getId() + "-" + productMeta.getDefaultUom();
-
-            ProductMeasurement measurement = null;
-            if(productNode.has("measurement")){
-
-                JsonNode measurementNode = productNode.get("measurement");
-
-                ArrayList<String> list = new ArrayList<String>();
-                list.add(relativeId);
-                Map<String, ProductMeasurement> productMeasByRelativeIds = measurementService.getProductMeasByRelativeIds(list);
+        ArrayList<ProductMeasurement> newMeasurements = new ArrayList<ProductMeasurement>();
+        ArrayList<ProductMeasurement> toDeleteMeasurements = new ArrayList<ProductMeasurement>();
+        ArrayList<String> toDeleterelativeId = new ArrayList<String>();
+        ArrayList<ProductMeasurement> toUpdateMeasurements = new ArrayList<ProductMeasurement>();
 
 
-                if(!productMeasByRelativeIds.containsKey(relativeId)){
+        Iterator<ProductMeasurement> repositoryMeasurementsIterator = repositoryMeasurements.iterator();
+        ProductMeasurement repositoryMeas = null;
+        if(repositoryMeasurementsIterator.hasNext()) repositoryMeas = repositoryMeasurementsIterator.next();
+        for(ProductMeasurement meas : measurements){
+            int compare = meas.getRelativeId().compareTo(repositoryMeas.getRelativeId());
+            System.out.println(meas.getRelativeId());
+            System.out.println(repositoryMeas.getRelativeId());
+            System.out.println(compare);
+            if(compare > 0) {
+                newMeasurements.add(meas);
+                continue;
+            }
+            if(compare < 0) {
+                toDeleteMeasurements.add(meas);
+                toDeleterelativeId.add(meas.getRelativeId());
+                if(repositoryMeasurementsIterator.hasNext()) repositoryMeas = repositoryMeasurementsIterator.next();
+                continue;
+            }
+            toUpdateMeasurements.add(meas);
+            if(repositoryMeasurementsIterator.hasNext()) repositoryMeas = repositoryMeasurementsIterator.next();
+        }
 
-                    // measurement is not existed, create it.
-                    measurement = new ProductMeasurement();
-                    measurement.setProductId(productMeta.getId())
-                        .setMeasurement(Float.parseFloat(measurementNode.get("measure").asText()))
-                        .setAnotherBarcode(measurementNode.has("barcode") ? measurementNode.get("barcode").asText() : null)
-                        .setSalesChannel(ProductUOM.LAYER)
-                        .setUOM_name(measurementNode.get("uom").asText());
+        boolean passDelete = toDeleteMeasurements.isEmpty();
+        if(!passDelete){
+            List<String> rejectDeleteMeasList = new ArrayList<String>();
+            JSONArray errorMeasurementJsonArray = new JSONArray();
 
-                    ProductMeasurement.valid(measurement);
-
-                    measurementService.addNewMeasurementToProduct(productMeta, measurement);
+            Map<String, Boolean> hasMovementRecord = stockMovementService.hasMovementRecord(toDeleterelativeId);
+            Set<String> keySet = hasMovementRecord.keySet();
+            for(String key : keySet) {
+                if(hasMovementRecord.get(key) == true) {
+                    rejectDeleteMeasList.add(key);
+                    errorMeasurementJsonArray.put(key);
+                    toDeleteMeasurements.removeIf(measurement -> {return measurement.getRelativeId().equals(key);});
                 }
             }
-        }
-        productService.update(productMeta);
-    } 
+            if(!rejectDeleteMeasList.isEmpty()){
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("error_name", "Measurements has sales record");
+                    jsonObject.put("error", "MeasHasSalesRecord");
+                    jsonObject.put("has_sales_record_measurements_relative_ids", errorMeasurementJsonArray);
+                    
+                } catch (JSONException e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getCause());
+                }
 
-    @PutMapping(path = "/increaseFrequently", consumes = "application/json")
-    public void indexImprove(@RequestBody String id){
-          
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonObject.toString());
+            }
+            // toDeleteMeasurements.removeAll(rejectDeleteMeasList);
+        }
+
+        for(ProductMeasurement measurement :newMeasurements){ // TODO : Temporary fix;
+            measurement.setSalesChannel(ProductUOM.LAYER);
+        }
+
+
+        productService.update(meta);
+        for(ProductMeasurement meas : newMeasurements){
+            measurementService.addNewMeasurementToProduct(meta, meas);
+        }
+        for(ProductMeasurement meas : toUpdateMeasurements){
+            measurementService.updateByRelativeId(meas, meas.getRelativeId());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(productMetaMeasurementsDTO);
+
+    }
+
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity deleteProduct(@PathVariable String id){
+        if(id == null || id.equals("") || id.isEmpty()) throw new NullPointerException("path variable 'id' must valid.");
+
+        ProductMeta repositoryProductMeta = productService.getProductMetaById(id);
+        if(repositoryProductMeta == null) throw new NoSuchProductException(id).setMessage("Product :" + id + " don't existed.");
+
+        List<ProductMeasurement> measurements = measurementService.findAllCustomMeasurementByProductId(id);
+
+        ArrayList<String> measureRelativeIds = new ArrayList<String>(measurements.size());
+        for(ProductMeasurement measurement : measurements){
+            measureRelativeIds.add(measurement.getRelativeId());
+        }
+
+        boolean rejectDelete = false;
+        Map<String, Boolean> hasMovementRecord = stockMovementService.hasMovementRecord(measureRelativeIds);
+        Iterator<String> iterator = hasMovementRecord.keySet().iterator();
+
+        JSONArray errorMeasurementJsonArray = new JSONArray();
+        while(iterator.hasNext()){
+            String next = iterator.next();
+            if(hasMovementRecord.get(next)) {
+                rejectDelete = true;
+                errorMeasurementJsonArray.put(next);
+            }
+        }
+        if(rejectDelete) {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("error_name", "Measurements has sales record");
+                jsonObject.put("error", "MeasHasSalesRecord");
+                jsonObject.put("has_sales_record_measurements_relative_ids", errorMeasurementJsonArray);
+                
+            } catch (JSONException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getCause());
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonObject.toString());
+        }
+
+        productService.delete(repositoryProductMeta);
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("message", "product delete success");
+            
+        } catch (JSONException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getCause());
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(jsonObject.toString());
+    }
+
+
+    @ExceptionHandler(NoSuchProductException.class)
+    public ResponseEntity handleNoSuchProductException(NoSuchProductException noSuchProductException){
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("error_name", NoSuchProductException.REASON);
+            jsonObject.put("error", NoSuchProductException.ERROR_ID);
+            jsonObject.put("message", noSuchProductException.getMessage());
+            jsonObject.put("no_such_product_id", noSuchProductException.getId());
+            
+        } catch (JSONException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getCause());
+        }
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonObject.toString());
     }
 
     // @ExceptionHandler(ProductValidationException.class)

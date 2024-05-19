@@ -1,5 +1,8 @@
 package com.knx.inventorydemo.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * when create a new product meta, it has unnullable field was id, name, defaultUom
  * 
@@ -11,6 +14,7 @@ public class ProductMeta {
     private String id;
     private String name;
     private Vendor vendor;
+    @JsonProperty("default_uom")
     private String defaultUom;
     private boolean activity;
 
@@ -76,6 +80,8 @@ public class ProductMeta {
     }
 
     public static boolean valid(ProductMeta productMeta){
+        return true;
+        //TODO
     }
 
 }
